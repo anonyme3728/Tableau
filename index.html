@@ -12,12 +12,11 @@
   html, body { height: 100%; background: #0b0d10; color: #f1f3f5;
     font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
     -webkit-user-select: none; overflow: hidden; }
-  .wrap { -webkit-transition: opacity 2s; transition: opacity 2s; }
   body.dim .wrap { opacity: .45; }
   .flex { display: -webkit-flex; display: flex; }
   .col { -webkit-flex-direction: column; flex-direction: column; }
   .grow { -webkit-flex: 1; flex: 1; min-height: 0; min-width: 0; }
-  .wrap { position: relative; z-index: 1; height: 100%; padding: 18px; }
+  .wrap { position: relative; z-index: 1; height: 100%; padding: 18px; -webkit-transition: opacity 2s; transition: opacity 2s; }
   .card { background: rgba(10, 13, 18, .58); border: 1px solid rgba(255, 255, 255, .07);
     border-radius: 18px; padding: 14px 20px; }
   h2 { font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, .55); text-transform: uppercase;
@@ -26,12 +25,11 @@
 
   /* ---------- Haut : heure + météo actuelle ---------- */
   .top { margin-bottom: 14px; }
-  .clock { -webkit-flex: none; flex: none; margin-right: 14px; -webkit-justify-content: center; justify-content: center; padding-right: 28px; }
+  .clock { -webkit-flex: none; flex: none; margin-right: 14px; -webkit-justify-content: center; justify-content: center; padding-right: 28px; width: 362px; }
   .time { font-size: 112px; font-weight: 200; letter-spacing: -4px; line-height: .95; white-space: nowrap;
     font-variant-numeric: tabular-nums; -webkit-font-feature-settings: "tnum"; font-feature-settings: "tnum"; }
   #hm { display: inline-block; width: 262px; }
   .sec { display: inline-block; width: 48px; font-size: 34px; color: rgba(255, 255, 255, .5); letter-spacing: 0; margin-left: 6px; }
-  .clock { width: 362px; }
   .date { font-size: 24px; color: rgba(255, 255, 255, .75); margin-top: 6px; }
   .now { -webkit-flex: 1; flex: 1; -webkit-align-items: center; align-items: center; }
   .icon { font-size: 64px; margin-right: 14px; }
@@ -278,7 +276,7 @@ function awayEvent(now) {
   if (!DATA || !DATA.events) return null;
   for (var i = 0; i < DATA.events.length; i++) {
     var e = DATA.events[i];
-    if (!e.allDay && e.start <= now && e.end > now && !/^Semaine \d+/.test(e.title)) return e;
+    if (!e.allDay && e.start <= now && e.end > now) return e;
   }
   return null;
 }
@@ -326,14 +324,11 @@ function buildScene(type, isDay) {
         rnd(0, 75).toFixed(1) + '%;width:' + sz.toFixed(1) + 'px;height:' + sz.toFixed(1) + 'px;opacity:' + rnd(.3, .9).toFixed(2) +
         ';-webkit-animation-delay:-' + rnd(0, 4).toFixed(1) + 's;animation-delay:-' + rnd(0, 4).toFixed(1) + 's"></div>';
     }
-    var illum = (1 - Math.cos(2 * Math.PI * p)) / 2;
-    if (illum >= 0) {
-      var D = 110, off = p < 0.5 ? -D * (p / 0.5) : D * ((1 - p) / 0.5);
-      orb = '<div class="moon"><div class="crater" style="width:18px;height:18px;left:30px;top:28px"></div>' +
-        '<div class="crater" style="width:12px;height:12px;left:62px;top:56px"></div>' +
-        '<div class="crater" style="width:22px;height:22px;left:44px;top:70px"></div>' +
-        '<div class="shade" style="left:' + Math.round(off) + 'px"></div></div>';
-    }
+    var D = 110, off = p < 0.5 ? -D * (p / 0.5) : D * ((1 - p) / 0.5);
+    orb = '<div class="moon"><div class="crater" style="width:18px;height:18px;left:30px;top:28px"></div>' +
+      '<div class="crater" style="width:12px;height:12px;left:62px;top:56px"></div>' +
+      '<div class="crater" style="width:22px;height:22px;left:44px;top:70px"></div>' +
+      '<div class="shade" style="left:' + Math.round(off) + 'px"></div></div>';
   }
   if (isDay && (type === 'clear' || type === 'partly')) orb = '<div class="sun"></div>';
   $('orb').innerHTML = orb;
@@ -440,7 +435,6 @@ function renderAgenda() {
   for (g = 0; g < NDAYS; g++) groups.push([]);
   for (i = 0; i < DATA.events.length; i++) {
     var e = DATA.events[i];
-    if (/^Semaine \d+/.test(e.title)) continue;
     if (!next && !e.allDay && e.end > now) next = e;
     if (e.start < t0 + DAY && e.end > t0) { groups[0].push(e); continue; }
     g = Math.floor((dayStart(new Date(e.start)) - t0) / DAY + 0.5);
@@ -677,13 +671,10 @@ function keepAwake() {
     }, function () {});
   } catch (e) {}
 }
-function stayAwake() { keepAwake(); }
-stayAwake();
-document.addEventListener('touchstart', stayAwake, false);
-document.addEventListener('touchend', stayAwake, false);
-document.addEventListener('click', stayAwake, false);
-document.addEventListener('visibilitychange', stayAwake, false);
-setInterval(stayAwake, 20000);
+keepAwake();
+document.addEventListener('touchend', keepAwake, false);
+document.addEventListener('visibilitychange', keepAwake, false);
+setInterval(keepAwake, 20000);
 setTimeout(function () { try { window.location.reload(); } catch (e) {} }, 6 * 3600 * 1000); // rechargement complet toutes les 6 h
 </script>
 </body>
