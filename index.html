@@ -111,7 +111,7 @@
   .dl .v span { color: rgba(255, 255, 255, .5); }
   .dl .p { font-size: 14px; color: #74c0fc; }
 
-  .status { position: fixed; z-index: 2; right: 12px; bottom: 3px; font-size: 11px; color: rgba(255, 255, 255, .3); }
+  .status { position: fixed; z-index: 2; right: 12px; bottom: 3px; font-size: 14px; color: rgba(255, 255, 255, .7); }
   .status.err { color: #ff6b6b; }
 
   /* ---------- Veille : écran noir, plus rien ne bouge ---------- */
@@ -260,7 +260,11 @@ function tick() {
   }
   document.body.className = sl ? 'sleep' : ((h >= 23 && location.search.indexOf('nodim') < 0) ? 'dim' : '');
   if (sl) return;
-  if (window.pageYOffset && document.activeElement !== $('taddIn')) window.scrollTo(0, 0); // pas de page décalée
+  if (document.activeElement !== $('taddIn')) { // pas de page décalée
+    if (window.pageYOffset) window.scrollTo(0, 0);
+    if (document.body.scrollTop) document.body.scrollTop = 0;
+    if (document.documentElement.scrollTop) document.documentElement.scrollTop = 0;
+  }
   if (tab === 'taches' && Date.now() - lastTouch > 3 * 60000 && document.activeElement !== $('taddIn')) showTab('agenda');
   $('hm').textContent = hm(d);
   $('s').textContent = pad(d.getSeconds());
@@ -523,7 +527,7 @@ function load() {
     renderWeather(d.weather);
     renderAgenda();
     renderTasks();
-    setStatus('MAJ ' + hm(new Date()), false);
+    setStatus('MAJ ' + hm(new Date()) + ' · ' + sizeInfo(), false);
   }, function (msg) { setStatus(msg + ' — nouvel essai bientôt', true); });
 }
 
@@ -665,6 +669,16 @@ function fitScreen() {
   $('scene').style.bottom = $('sleep').style.bottom = v ? 'auto' : '';
 }
 fitScreen();
+// Diagnostic temporaire (bande noire) : fenêtre / écran / app / décalages / marge du haut
+function sizeInfo() {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:0;height:0;padding-top:env(safe-area-inset-top);visibility:hidden';
+  document.body.appendChild(t);
+  var sa = t.offsetHeight; document.body.removeChild(t);
+  return window.innerWidth + 'x' + window.innerHeight + ' / ' + screen.width + 'x' + screen.height +
+    ' / ' + (navigator.standalone ? 'app' : 'web') + ' / y' + window.pageYOffset + ',' + document.body.scrollTop +
+    ' / h' + document.documentElement.clientHeight + ' / sa' + sa;
+}
 // Taille de l'écran qui change (rotation…) : on recalcule ce qui tient dans l'agenda
 var rsT = null;
 window.addEventListener('resize', function () {
