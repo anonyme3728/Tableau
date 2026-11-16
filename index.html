@@ -653,12 +653,25 @@ function refreshNow(ev) {
   setStatus('Mise à jour…', false);
   load();
 }
+// App « écran d'accueil » avec barre d'état transparente : iOS donne parfois une hauteur trop petite
+// (bande noire en bas). On prend la vraie hauteur de l'écran.
+function fitScreen() {
+  if (!navigator.standalone) return;
+  var land = window.innerWidth > window.innerHeight;
+  var H = land ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
+  var v = H > window.innerHeight ? H + 'px' : '';
+  document.documentElement.style.height = document.body.style.height = v;
+  $('scene').style.height = $('sleep').style.height = v;
+  $('scene').style.bottom = $('sleep').style.bottom = v ? 'auto' : '';
+}
+fitScreen();
 // Taille de l'écran qui change (rotation…) : on recalcule ce qui tient dans l'agenda
 var rsT = null;
 window.addEventListener('resize', function () {
   clearTimeout(rsT);
-  rsT = setTimeout(function () { if (DATA) renderAgenda(); }, 300);
+  rsT = setTimeout(function () { fitScreen(); if (DATA) renderAgenda(); }, 300);
 }, false);
+window.addEventListener('orientationchange', function () { setTimeout(function () { fitScreen(); if (DATA) renderAgenda(); }, 500); }, false);
 document.addEventListener('touchend', refreshNow, false);
 document.addEventListener('click', refreshNow, false);
 document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshNow(); }, false);
