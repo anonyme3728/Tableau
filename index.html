@@ -27,8 +27,11 @@
   /* ---------- Haut : heure + météo actuelle ---------- */
   .top { margin-bottom: 14px; }
   .clock { -webkit-flex: none; flex: none; margin-right: 14px; -webkit-justify-content: center; justify-content: center; padding-right: 28px; }
-  .time { font-size: 112px; font-weight: 200; letter-spacing: -4px; line-height: .95; white-space: nowrap; }
-  .sec { font-size: 34px; color: rgba(255, 255, 255, .5); letter-spacing: 0; margin-left: 6px; }
+  .time { font-size: 112px; font-weight: 200; letter-spacing: -4px; line-height: .95; white-space: nowrap;
+    font-variant-numeric: tabular-nums; -webkit-font-feature-settings: "tnum"; font-feature-settings: "tnum"; }
+  #hm { display: inline-block; width: 262px; }
+  .sec { display: inline-block; width: 48px; font-size: 34px; color: rgba(255, 255, 255, .5); letter-spacing: 0; margin-left: 6px; }
+  .clock { width: 362px; }
   .date { font-size: 24px; color: rgba(255, 255, 255, .75); margin-top: 6px; }
   .now { -webkit-flex: 1; flex: 1; -webkit-align-items: center; align-items: center; }
   .icon { font-size: 64px; margin-right: 14px; }
@@ -43,14 +46,14 @@
   /* ---------- Bas : agenda + prévisions ---------- */
   .agenda { -webkit-flex: 1.3; flex: 1.3; margin-right: 14px; overflow: hidden; }
   .side { -webkit-flex: 1; flex: 1; }
-  .next { background: rgba(40, 90, 150, .45); border-radius: 12px; padding: 10px 16px; margin-bottom: 6px; }
+  .next { background: rgba(40, 90, 150, .45); border-radius: 12px; padding: 8px 16px; margin-bottom: 2px; }
   .next .lbl { font-size: 12px; color: #a5d8ff; text-transform: uppercase; letter-spacing: 2px; }
   .next .ttl { font-size: 23px; font-weight: 600; margin-top: 2px; }
   .next .info { font-size: 15px; color: rgba(255, 255, 255, .75); }
-  .day { margin-top: 10px; }
-  .ev { -webkit-align-items: center; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(255, 255, 255, .07); }
+  .day { margin-top: 8px; }
+  .ev { -webkit-align-items: center; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, .07); }
   .ev:last-child { border-bottom: 0; }
-  .ev .bar { width: 5px; height: 34px; border-radius: 3px; margin-right: 12px; -webkit-flex-shrink: 0; flex-shrink: 0; }
+  .ev .bar { width: 5px; height: 30px; border-radius: 3px; margin-right: 12px; -webkit-flex-shrink: 0; flex-shrink: 0; }
   .ev .when { width: 80px; font-size: 17px; color: rgba(255, 255, 255, .8); -webkit-flex-shrink: 0; flex-shrink: 0; line-height: 1.15; }
   .ev .when small { font-size: 13px; color: rgba(255, 255, 255, .5); }
   .ev .ttl { font-size: 19px; }
@@ -133,7 +136,7 @@
 
   @media (orientation: portrait) {
     .top { -webkit-flex-wrap: wrap; flex-wrap: wrap; }
-    .clock { -webkit-flex: 1 1 100%; flex: 1 1 100%; margin: 0 0 14px; }
+    .clock { -webkit-flex: 1 1 100%; flex: 1 1 100%; margin: 0 0 14px; width: auto; }
     .bottom { -webkit-flex-direction: column; flex-direction: column; }
     .agenda { margin-right: 0; margin-bottom: 14px; }
   }
@@ -170,7 +173,7 @@
 <script>
 // ES5 uniquement (Safari des vieux iPad)
 if (location.search.indexOf('apercu') >= 0) { // captures d'écran : taille iPad fixe
-  document.documentElement.style.height = document.body.style.height = '768px';
+  document.documentElement.style.height = document.body.style.height = '748px'; // iPad en plein écran (barre d'état comprise)
   document.documentElement.style.width = document.body.style.width = '1024px';
 }
 var JOURS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
@@ -241,15 +244,15 @@ function buildScene(type, isDay) {
   var sc = $('scene'), h = '', orb = '', i;
   sc.className = 'sky-' + (isDay ? 'day' : 'night') + '-' + type;
 
-  if (!isDay && (type === 'clear' || type === 'partly')) { // étoiles + lune
-    for (i = 0; i < 90; i++) {
+  if (!isDay) { // la nuit : lune toujours, étoiles si le ciel est dégagé
+    for (i = 0; i < ((type === 'clear' || type === 'partly') ? 90 : 0); i++) {
       var sz = rnd(1, 2.6);
       h += '<div class="star' + (i % 4 === 0 ? ' tw' : '') + '" style="left:' + rnd(0, 100).toFixed(1) + '%;top:' +
         rnd(0, 75).toFixed(1) + '%;width:' + sz.toFixed(1) + 'px;height:' + sz.toFixed(1) + 'px;opacity:' + rnd(.3, .9).toFixed(2) +
         ';-webkit-animation-delay:-' + rnd(0, 4).toFixed(1) + 's;animation-delay:-' + rnd(0, 4).toFixed(1) + 's"></div>';
     }
     var illum = (1 - Math.cos(2 * Math.PI * p)) / 2;
-    if (illum > 0.04) {
+    if (illum >= 0) {
       var D = 110, off = p < 0.5 ? -D * (p / 0.5) : D * ((1 - p) / 0.5);
       orb = '<div class="moon"><div class="crater" style="width:18px;height:18px;left:30px;top:28px"></div>' +
         '<div class="crater" style="width:12px;height:12px;left:62px;top:56px"></div>' +
@@ -259,7 +262,8 @@ function buildScene(type, isDay) {
   }
   if (isDay && (type === 'clear' || type === 'partly')) orb = '<div class="sun"></div>';
   $('orb').innerHTML = orb;
-  $('wIcon').style.display = orb ? 'none' : '';
+  // icône météo masquée seulement quand le soleil / la lune la remplace (ciel dégagé)
+  $('wIcon').style.display = (orb && (type === 'clear' || type === 'partly')) ? 'none' : '';
 
   var light = isDay ? 'rgba(255,255,255,.85)' : 'rgba(150,160,180,.35)';
   var grey = isDay ? 'rgba(215,220,228,.8)' : 'rgba(90,98,112,.5)';
