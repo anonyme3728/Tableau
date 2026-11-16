@@ -33,7 +33,7 @@
   .now { -webkit-flex: 1; flex: 1; -webkit-align-items: center; align-items: center; }
   .icon { font-size: 64px; margin-right: 14px; }
   .temp { font-size: 60px; font-weight: 300; line-height: 1; }
-  .desc { font-size: 17px; color: rgba(255, 255, 255, .75); margin-top: 4px; }
+  .desc { font-size: 17px; color: rgba(255, 255, 255, .75); margin-top: 4px; white-space: nowrap; }
   .orb { position: relative; -webkit-flex: 1; flex: 1; height: 110px; min-width: 120px; }
   .orb div { position: absolute; }
   .facts { padding-left: 16px; border-left: 1px solid rgba(255, 255, 255, .1); }
@@ -169,6 +169,10 @@
 
 <script>
 // ES5 uniquement (Safari des vieux iPad)
+if (location.search.indexOf('apercu') >= 0) { // captures d'écran : taille iPad fixe
+  document.documentElement.style.height = document.body.style.height = '768px';
+  document.documentElement.style.width = document.body.style.width = '1024px';
+}
 var JOURS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
 var MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 var DATA = null;
@@ -451,6 +455,12 @@ function refreshNow(ev) {
   setStatus('Mise à jour…', false);
   load();
 }
+// Taille de l'écran qui change (rotation…) : on recalcule ce qui tient dans l'agenda
+var rsT = null;
+window.addEventListener('resize', function () {
+  clearTimeout(rsT);
+  rsT = setTimeout(function () { if (DATA) renderAgenda(); }, 300);
+}, false);
 document.addEventListener('touchend', refreshNow, false);
 document.addEventListener('click', refreshNow, false);
 document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshNow(); }, false);
