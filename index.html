@@ -2,9 +2,9 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Tableau">
 <title>Tableau de bord</title>
 <style>
@@ -18,6 +18,8 @@
   .col { -webkit-flex-direction: column; flex-direction: column; }
   .grow { -webkit-flex: 1; flex: 1; min-height: 0; min-width: 0; }
   .wrap { position: relative; z-index: 1; height: 100%; padding: 18px; }
+  /* La barre d'état iOS (heure, Wi-Fi, batterie) passe en transparent par-dessus le fond : on lui laisse sa place */
+  .wrap { padding-top: 18px; padding-top: calc(env(safe-area-inset-top, 0px) + 10px); }
   .card { background: rgba(10, 13, 18, .58); border: 1px solid rgba(255, 255, 255, .07);
     border-radius: 18px; padding: 14px 20px; }
   h2 { font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, .55); text-transform: uppercase;
@@ -45,6 +47,35 @@
 
   /* ---------- Bas : agenda + prévisions ---------- */
   .agenda { -webkit-flex: 1.3; flex: 1.3; margin-right: 14px; overflow: hidden; }
+  #agenda { overflow: hidden; }
+  .tabs { margin-bottom: 2px; }
+  .tab { font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, .4); text-transform: uppercase; letter-spacing: 2px;
+    padding: 2px 0 6px; margin-right: 24px; border-bottom: 2px solid transparent; cursor: pointer; }
+  .tab.on { color: rgba(255, 255, 255, .85); border-bottom-color: #74c0fc; }
+  .tab b { background: #e8590c; color: #fff; border-radius: 9px; padding: 1px 7px; font-size: 11px; letter-spacing: 0; margin-left: 6px; }
+  #tasksPane { display: none; }
+  .agenda.show-tasks #agenda { display: none; }
+  .agenda.show-tasks #tasksPane { display: -webkit-flex; display: flex; }
+  .tadd { margin: 6px 0 6px; }
+  .tadd input { -webkit-flex: 1; flex: 1; min-width: 0; font-size: 18px; color: #fff; background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .14); border-radius: 10px; padding: 9px 12px; outline: none;
+    -webkit-appearance: none; -webkit-user-select: text; user-select: text; font-family: inherit; }
+  .tadd button { margin-left: 8px; font-size: 17px; font-weight: 600; color: #0b0d10; background: #74c0fc; border: 0;
+    border-radius: 10px; padding: 0 16px; -webkit-appearance: none; font-family: inherit; cursor: pointer; }
+  .tlist { overflow-y: scroll; -webkit-overflow-scrolling: touch; }
+  .task { -webkit-align-items: center; align-items: center; padding: 4px 0; border-bottom: 1px solid rgba(255, 255, 255, .07);
+    -webkit-transition: opacity .6s; transition: opacity .6s; }
+  .task:last-child { border-bottom: 0; }
+  .task .hit { padding: 8px 14px 8px 0; cursor: pointer; }
+  .task .ck { width: 30px; height: 30px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .45);
+    text-align: center; line-height: 26px; font-size: 17px; font-weight: 700; color: transparent; }
+  .task .ttl { font-size: 19px; }
+  .task .sub { font-size: 14px; color: rgba(255, 255, 255, .5); }
+  .task .sub.late { color: #ff8787; }
+  .task.done { opacity: .3; }
+  .task.done .ck { background: #40c057; border-color: #40c057; color: #fff; }
+  .task.done .ttl { text-decoration: line-through; }
+  .task.wait { opacity: .55; }
   .side { -webkit-flex: 1; flex: 1; }
   .next { background: rgba(40, 90, 150, .45); border-radius: 12px; padding: 8px 16px; margin-bottom: 2px; }
   .next .lbl { font-size: 12px; color: #a5d8ff; text-transform: uppercase; letter-spacing: 2px; }
@@ -80,6 +111,11 @@
 
   .status { position: fixed; z-index: 2; right: 12px; bottom: 3px; font-size: 11px; color: rgba(255, 255, 255, .3); }
   .status.err { color: #ff6b6b; }
+
+  /* ---------- Veille : écran noir, plus rien ne bouge ---------- */
+  #sleep { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 20; background: #000; cursor: pointer; }
+  body.sleep #sleep { display: block; }
+  body.sleep .wrap, body.sleep #scene, body.sleep .status { display: none; }
 
   /* ---------- Fond animé ---------- */
   #scene { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; overflow: hidden;
@@ -161,7 +197,14 @@
     </div>
   </div>
   <div class="bottom flex grow">
-    <div class="agenda card" id="agenda"><h2>Agenda</h2><div class="empty">Chargement…</div></div>
+    <div class="agenda card flex col" id="agendaCard">
+      <div class="tabs flex"><div class="tab on" id="tabA">Agenda</div><div class="tab" id="tabT">Tâches<b id="tcount" style="display:none"></b></div></div>
+      <div class="grow" id="agenda"><div class="empty">Chargement…</div></div>
+      <div class="grow col" id="tasksPane">
+        <form class="tadd flex" id="taddForm"><input id="taddIn" type="text" placeholder="Nouvelle tâche…" maxlength="200" autocomplete="off"><button type="submit">Ajouter</button></form>
+        <div class="tlist grow" id="tlist"><div class="empty">Chargement…</div></div>
+      </div>
+    </div>
     <div class="side flex col">
       <div class="hours card flex col grow"><h2>Heure par heure <span class="hint">glisse ↕</span></h2><div class="hlist grow" id="hours"></div></div>
       <div class="card"><h2>Prochains jours</h2><div id="days"></div></div>
@@ -169,11 +212,12 @@
   </div>
 </div>
 <div class="status" id="status"></div>
+<div id="sleep"></div>
 
 <script>
 // ES5 uniquement (Safari des vieux iPad)
 if (location.search.indexOf('apercu') >= 0) { // captures d'écran : taille iPad fixe
-  document.documentElement.style.height = document.body.style.height = '748px'; // iPad en plein écran (barre d'état comprise)
+  document.documentElement.style.height = document.body.style.height = '768px'; // iPad en plein écran (la barre d'état passe par-dessus)
   document.documentElement.style.width = document.body.style.width = '1024px';
 }
 var JOURS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
@@ -207,13 +251,38 @@ function wmo(code, day) {
 
 /* ---------- Horloge ---------- */
 function tick() {
-  var d = new Date();
+  var d = new Date(), sl = shouldSleep(d), h = d.getHours();
+  if (sl !== sleeping) {
+    sleeping = sl;
+    if (!sl) { if (DATA) { renderAgenda(); renderTasks(); } load(); } // réveil : on remet tout à jour
+  }
+  document.body.className = sl ? 'sleep' : ((h >= 23 && location.search.indexOf('nodim') < 0) ? 'dim' : '');
+  if (sl) return;
+  if (tab === 'taches' && Date.now() - lastTouch > 3 * 60000 && document.activeElement !== $('taddIn')) showTab('agenda');
   $('hm').textContent = hm(d);
   $('s').textContent = pad(d.getSeconds());
   $('date').textContent = cap(JOURS[d.getDay()]) + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()] + ' ' + d.getFullYear();
-  var h = d.getHours();
-  document.body.className = ((h >= 23 || h < 6) && location.search.indexOf('nodim') < 0) ? 'dim' : '';
   if (d.getSeconds() === 0 && DATA) renderAgenda();
+}
+
+/* ---------- Veille ---------- */
+// Écran noir la nuit (0 h – 9 h) et pendant les événements à heure fixe de l'agenda (je ne suis pas là).
+// Toucher l'écran noir = rallumé 10 min. Tests : ?veille (forcer), ?noveille (désactiver).
+var sleeping = false, wakeUntil = 0;
+function awayEvent(now) {
+  if (!DATA || !DATA.events) return null;
+  for (var i = 0; i < DATA.events.length; i++) {
+    var e = DATA.events[i];
+    if (!e.allDay && e.start <= now && e.end > now && !/^Semaine \d+/.test(e.title)) return e;
+  }
+  return null;
+}
+function shouldSleep(d) {
+  var q = location.search;
+  if (q.indexOf('noveille') >= 0) return false;
+  if (q.indexOf('veille') >= 0) return true;
+  if (d.getTime() < wakeUntil) return false;
+  return d.getHours() < 9 || !!awayEvent(d.getTime());
 }
 
 /* ---------- Lune ---------- */
@@ -359,6 +428,7 @@ function evHtml(e, now) {
 }
 
 function renderAgenda() {
+  if (tab !== 'agenda' || sleeping) return; // caché : on recalculera à l'affichage
   var now = Date.now(), t0 = dayStart(new Date()), DAY = 86400000, NDAYS = 8;
   var groups = [], next = null, i, g;
   for (g = 0; g < NDAYS; g++) groups.push([]);
@@ -419,35 +489,132 @@ function setStatus(txt, err) {
 }
 
 var reqN = 0;
-function load() {
+function jsonp(query, ok, fail) {
   var id = scriptId();
-  if (!id) {
-    $('agenda').innerHTML = '<h2>Configuration</h2><div class="empty">Ajoute l\'identifiant du script Google à la fin du lien : #AKfy…</div>';
-    return;
-  }
+  if (!id) { if (fail) fail('Pas configuré'); return; }
   var cbName = 'dashCb' + (++reqN), done = false;
   var s = document.createElement('script');
   function cleanup() {
     window[cbName] = function () {};
     if (s.parentNode) s.parentNode.removeChild(s);
   }
-  window[cbName] = function (d) {
-    done = true; cleanup();
-    DATA = d;
-    renderWeather(d.weather);
-    renderAgenda();
-    setStatus('MAJ ' + hm(new Date()), false);
-  };
-  s.onerror = function () { if (!done) { done = true; cleanup(); setStatus('Hors ligne — nouvel essai bientôt', true); } };
-  setTimeout(function () { if (!done) { done = true; cleanup(); setStatus('Pas de réponse — nouvel essai bientôt', true); } }, 60000);
-  s.src = 'https://script.google.com/macros/s/' + encodeURIComponent(id) + '/exec?callback=' + cbName + '&t=' + Date.now();
+  window[cbName] = function (d) { if (done) return; done = true; cleanup(); ok(d); };
+  s.onerror = function () { if (!done) { done = true; cleanup(); if (fail) fail('Hors ligne'); } };
+  setTimeout(function () { if (!done) { done = true; cleanup(); if (fail) fail('Pas de réponse'); } }, 60000);
+  s.src = 'https://script.google.com/macros/s/' + encodeURIComponent(id) + '/exec?callback=' + cbName + '&t=' + Date.now() + (query ? '&' + query : '');
   document.body.appendChild(s);
 }
+
+var lastLoad = 0;
+function load() {
+  if (!scriptId()) {
+    $('agenda').innerHTML = '<div class="empty">Ajoute l\'identifiant du script Google à la fin du lien : #AKfy…</div>';
+    return;
+  }
+  lastLoad = Date.now();
+  jsonp('', function (d) {
+    DATA = d;
+    TASKS = d.tasks || null;
+    renderWeather(d.weather);
+    renderAgenda();
+    renderTasks();
+    setStatus('MAJ ' + hm(new Date()), false);
+  }, function (msg) { setStatus(msg + ' — nouvel essai bientôt', true); });
+}
+
+/* ---------- Onglets ---------- */
+var tab = 'agenda', lastTouch = 0;
+function showTab(t) {
+  tab = t;
+  lastTouch = Date.now();
+  $('agendaCard').className = 'agenda card flex col' + (t === 'taches' ? ' show-tasks' : '');
+  $('tabA').className = 'tab' + (t === 'agenda' ? ' on' : '');
+  $('tabT').className = 'tab' + (t === 'taches' ? ' on' : '');
+  if (t === 'agenda') { if (document.activeElement === $('taddIn')) $('taddIn').blur(); if (DATA) renderAgenda(); }
+}
+$('tabA').addEventListener('click', function () { showTab('agenda'); }, false);
+$('tabT').addEventListener('click', function () { showTab('taches'); }, false);
+
+/* ---------- Tâches (Google Tasks, liste « Mes tâches ») ---------- */
+var TASKS = null, doneIds = {}, tmpN = 0;
+function dueText(due) {
+  var d = new Date(due.slice(0, 10) + 'T12:00:00'), diff = Math.round((dayStart(d) - dayStart(new Date())) / 86400000);
+  if (diff < 0) return ['En retard · ' + JOURS[d.getDay()] + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()], true];
+  if (diff === 0) return ["Aujourd'hui", false];
+  if (diff === 1) return ['Demain', false];
+  return [cap(JOURS[d.getDay()]) + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()], false];
+}
+function renderTasks() {
+  var list = [], i;
+  if (TASKS) for (i = 0; i < TASKS.length; i++) if (!doneIds[TASKS[i].id]) list.push(TASKS[i]);
+  var c = $('tcount');
+  c.textContent = list.length;
+  c.style.display = list.length ? '' : 'none';
+  var box = $('tlist'), keep = box.scrollTop, html = '';
+  if (!TASKS) {
+    html = '<div class="empty">' + (DATA ? 'Tâches indisponibles (voir INSTALLATION.md)' : 'Chargement…') + '</div>';
+  } else if (!list.length) {
+    html = '<div class="empty">Rien à faire 🎉</div>';
+  }
+  for (i = 0; i < list.length; i++) {
+    var t = list[i], sub = '';
+    if (t.due) { var dt = dueText(t.due); sub = '<div class="sub' + (dt[1] ? ' late' : '') + '">' + esc(dt[0]) + '</div>'; }
+    else if (t.notes) sub = '<div class="sub">' + esc(t.notes.split('\n')[0].slice(0, 80)) + '</div>';
+    html += '<div class="task flex' + (t.wait ? ' wait' : '') + '" data-id="' + esc(t.id) + '"><div class="hit"><div class="ck">✓</div></div>' +
+      '<div class="grow"><div class="ttl">' + esc(t.title) + '</div>' + sub + '</div></div>';
+  }
+  box.innerHTML = html;
+  box.scrollTop = keep;
+}
+// Cocher = fait : la tâche est terminée dans Google Tasks et disparaît
+$('tlist').addEventListener('click', function (ev) {
+  var el = ev.target, hit = null;
+  while (el && el !== this) { if (el.className === 'hit') hit = el; if (hit && el.getAttribute('data-id')) break; el = el.parentNode; }
+  if (!hit || !el || el === this) return;
+  var id = el.getAttribute('data-id');
+  if (id.indexOf('tmp') === 0 || doneIds[id]) return;
+  doneIds[id] = 1;
+  el.className += ' done';
+  var c = $('tcount'), n = parseInt(c.textContent, 10) - 1;
+  c.textContent = n; c.style.display = n > 0 ? '' : 'none';
+  setTimeout(renderTasks, 700);
+  jsonp('action=doneTask&id=' + encodeURIComponent(id), function (d) {
+    if (d && d.tasks) { TASKS = d.tasks; renderTasks(); }
+  }, function () { delete doneIds[id]; renderTasks(); setStatus('Tâche non enregistrée — réessaie', true); });
+}, false);
+$('taddForm').addEventListener('submit', function (ev) {
+  ev.preventDefault();
+  var inp = $('taddIn'), title = inp.value.replace(/^\s+|\s+$/g, '');
+  if (!title) return;
+  inp.value = '';
+  var tmp = { id: 'tmp' + (++tmpN), title: title, wait: true };
+  if (!TASKS) TASKS = [];
+  TASKS.unshift(tmp);
+  renderTasks();
+  jsonp('action=addTask&title=' + encodeURIComponent(title), function (d) {
+    if (d && d.tasks) TASKS = d.tasks;
+    renderTasks();
+  }, function () {
+    for (var i = 0; i < TASKS.length; i++) if (TASKS[i] === tmp) TASKS.splice(i, 1);
+    renderTasks();
+    if (!inp.value) inp.value = title;
+    setStatus('Tâche non ajoutée — réessaie', true);
+  });
+}, false);
+
+/* ---------- Écran noir : toucher = rallumé 10 min ---------- */
+function wakeTap() { if (sleeping) { wakeUntil = Date.now() + 10 * 60000; tick(); } }
+$('sleep').addEventListener('touchend', wakeTap, false);
+$('sleep').addEventListener('click', wakeTap, false);
+document.addEventListener('touchstart', function () { lastTouch = Date.now(); }, false);
+document.addEventListener('click', function () { lastTouch = Date.now(); }, false);
 
 tick();
 setInterval(tick, 1000);
 load();
-setInterval(load, 10 * 60 * 1000);                                   // données toutes les 10 min
+setInterval(function () { // données toutes les 10 min (toutes les 30 min en veille)
+  if (!sleeping || Date.now() - lastLoad > 29 * 60000) load();
+}, 10 * 60 * 1000);
 // Toucher l'écran (hors liste des heures) ou revenir sur l'app = mise à jour immédiate (max 1 fois / 15 s)
 var lastTap = 0;
 function inHours(el) { while (el) { if (el.id === 'hours') return true; el = el.parentNode; } return false; }
