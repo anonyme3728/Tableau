@@ -9,77 +9,138 @@
 <title>Tableau de bord</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; background: #0b0d10; color: #e9ecef;
+  html, body { height: 100%; background: #0b0d10; color: #f1f3f5;
     font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
     -webkit-user-select: none; overflow: hidden; }
-  body { -webkit-transition: opacity 2s; transition: opacity 2s; }
-  body.dim { opacity: .35; }
+  .wrap { -webkit-transition: opacity 2s; transition: opacity 2s; }
+  body.dim .wrap { opacity: .45; }
   .flex { display: -webkit-flex; display: flex; }
   .col { -webkit-flex-direction: column; flex-direction: column; }
   .grow { -webkit-flex: 1; flex: 1; min-height: 0; min-width: 0; }
-  .wrap { height: 100%; padding: 20px; }
-  .card { background: #14171b; border-radius: 16px; padding: 16px 20px; }
-  h2 { font-size: 13px; font-weight: 600; color: #6c757d; text-transform: uppercase;
-    letter-spacing: 2px; margin-bottom: 8px; }
+  .wrap { position: relative; z-index: 1; height: 100%; padding: 18px; }
+  .card { background: rgba(10, 13, 18, .58); border: 1px solid rgba(255, 255, 255, .07);
+    border-radius: 18px; padding: 14px 20px; }
+  h2 { font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, .55); text-transform: uppercase;
+    letter-spacing: 2px; margin-bottom: 6px; }
+  .muted { color: rgba(255, 255, 255, .55); }
 
-  /* Haut : heure + météo actuelle */
-  .top { margin-bottom: 16px; -webkit-align-items: stretch; align-items: stretch; }
-  .clock { -webkit-flex: 1.25; flex: 1.25; margin-right: 16px; -webkit-justify-content: center; justify-content: center; }
-  .time { font-size: 120px; font-weight: 200; letter-spacing: -4px; line-height: .95; }
-  .sec { font-size: 36px; color: #6c757d; letter-spacing: 0; margin-left: 6px; }
-  .date { font-size: 26px; color: #adb5bd; margin-top: 6px; }
+  /* ---------- Haut : heure + météo actuelle ---------- */
+  .top { margin-bottom: 14px; }
+  .clock { -webkit-flex: none; flex: none; margin-right: 14px; -webkit-justify-content: center; justify-content: center; padding-right: 28px; }
+  .time { font-size: 112px; font-weight: 200; letter-spacing: -4px; line-height: .95; white-space: nowrap; }
+  .sec { font-size: 34px; color: rgba(255, 255, 255, .5); letter-spacing: 0; margin-left: 6px; }
+  .date { font-size: 24px; color: rgba(255, 255, 255, .75); margin-top: 6px; }
   .now { -webkit-flex: 1; flex: 1; -webkit-align-items: center; align-items: center; }
-  .icon { font-size: 72px; margin-right: 16px; }
-  .temp { font-size: 64px; font-weight: 300; line-height: 1; }
-  .desc { font-size: 18px; color: #adb5bd; margin-top: 6px; }
-  .minmax { font-size: 16px; color: #6c757d; margin-top: 4px; }
+  .icon { font-size: 64px; margin-right: 14px; }
+  .temp { font-size: 60px; font-weight: 300; line-height: 1; }
+  .desc { font-size: 17px; color: rgba(255, 255, 255, .75); margin-top: 4px; }
+  .orb { position: relative; -webkit-flex: 1; flex: 1; height: 110px; min-width: 120px; }
+  .orb div { position: absolute; }
+  .facts { padding-left: 16px; border-left: 1px solid rgba(255, 255, 255, .1); }
+  .fact { font-size: 16px; padding: 3px 0; white-space: nowrap; }
+  .fact b { font-weight: 600; }
 
-  /* Bas : agenda + prévisions */
-  .agenda { -webkit-flex: 1.25; flex: 1.25; margin-right: 16px; overflow: hidden; }
+  /* ---------- Bas : agenda + prévisions ---------- */
+  .agenda { -webkit-flex: 1.3; flex: 1.3; margin-right: 14px; overflow: hidden; }
   .side { -webkit-flex: 1; flex: 1; }
-  .next { background: #1c2a3a; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; }
-  .next .lbl { font-size: 13px; color: #74c0fc; text-transform: uppercase; letter-spacing: 2px; }
-  .next .ttl { font-size: 24px; font-weight: 600; margin-top: 4px; }
-  .next .info { font-size: 16px; color: #adb5bd; margin-top: 2px; }
+  .next { background: rgba(40, 90, 150, .45); border-radius: 12px; padding: 10px 16px; margin-bottom: 6px; }
+  .next .lbl { font-size: 12px; color: #a5d8ff; text-transform: uppercase; letter-spacing: 2px; }
+  .next .ttl { font-size: 23px; font-weight: 600; margin-top: 2px; }
+  .next .info { font-size: 15px; color: rgba(255, 255, 255, .75); }
   .day { margin-top: 10px; }
-  .ev { -webkit-align-items: center; align-items: center; padding: 8px 0; border-bottom: 1px solid #1f2328; }
+  .ev { -webkit-align-items: center; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(255, 255, 255, .07); }
   .ev:last-child { border-bottom: 0; }
   .ev .bar { width: 5px; height: 34px; border-radius: 3px; margin-right: 12px; -webkit-flex-shrink: 0; flex-shrink: 0; }
-  .ev .when { width: 84px; font-size: 17px; color: #adb5bd; -webkit-flex-shrink: 0; flex-shrink: 0; line-height: 1.15; }
-  .ev .when small { font-size: 13px; color: #6c757d; }
+  .ev .when { width: 80px; font-size: 17px; color: rgba(255, 255, 255, .8); -webkit-flex-shrink: 0; flex-shrink: 0; line-height: 1.15; }
+  .ev .when small { font-size: 13px; color: rgba(255, 255, 255, .5); }
   .ev .ttl { font-size: 19px; }
-  .ev .loc { font-size: 14px; color: #6c757d; }
-  .ev.past { opacity: .35; }
-  .ev.live .ttl { color: #fff; font-weight: 600; }
-  .empty { color: #495057; font-size: 17px; padding: 6px 0; }
+  .ev .loc { font-size: 14px; color: rgba(255, 255, 255, .5); }
+  .ev.past { opacity: .4; }
+  .ev.live .ttl { font-weight: 600; }
+  .empty { color: rgba(255, 255, 255, .4); font-size: 17px; padding: 4px 0; }
 
-  .hours { margin-bottom: 16px; }
-  .hr { -webkit-align-items: center; align-items: center; -webkit-flex: 1; flex: 1; border-bottom: 1px solid #1f2328; }
-  .hr:last-child { border-bottom: 0; }
-  .hr .t { width: 52px; font-size: 16px; color: #6c757d; }
+  .hours { margin-bottom: 14px; }
+  .hlist { overflow-y: scroll; -webkit-overflow-scrolling: touch; margin-right: -10px; padding-right: 10px; }
+  .hr { -webkit-align-items: center; align-items: center; height: 40px; border-bottom: 1px solid rgba(255, 255, 255, .07); }
+  .hr .t { width: 50px; font-size: 16px; color: rgba(255, 255, 255, .6); }
   .hr .i { width: 40px; font-size: 22px; }
   .hr .v { -webkit-flex: 1; flex: 1; font-size: 19px; }
-  .hr .p { font-size: 14px; color: #4dabf7; }
-  .dl { -webkit-align-items: center; align-items: center; padding: 6px 0; }
-  .dl .n { width: 90px; font-size: 17px; color: #adb5bd; text-transform: capitalize; }
+  .hr .p { font-size: 14px; color: #74c0fc; }
+  .hsep { font-size: 12px; font-weight: 600; color: #a5d8ff; text-transform: uppercase; letter-spacing: 2px; padding: 10px 0 4px; }
+  .hint { font-size: 11px; color: rgba(255, 255, 255, .35); text-transform: none; letter-spacing: 0; font-weight: 400; float: right; }
+  .dl { -webkit-align-items: center; align-items: center; padding: 5px 0; }
+  .dl .n { width: 96px; font-size: 17px; color: rgba(255, 255, 255, .8); }
   .dl .i { width: 40px; font-size: 24px; }
   .dl .v { -webkit-flex: 1; flex: 1; font-size: 18px; }
-  .dl .v span { color: #6c757d; }
-  .dl .p { font-size: 14px; color: #4dabf7; }
+  .dl .v span { color: rgba(255, 255, 255, .5); }
+  .dl .p { font-size: 14px; color: #74c0fc; }
 
-  .status { position: fixed; right: 12px; bottom: 4px; font-size: 11px; color: #343a40; }
-  .status.err { color: #e03131; }
+  .status { position: fixed; z-index: 2; right: 12px; bottom: 3px; font-size: 11px; color: rgba(255, 255, 255, .3); }
+  .status.err { color: #ff6b6b; }
+
+  /* ---------- Fond animé ---------- */
+  #scene { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; overflow: hidden;
+    background: #0d1730; -webkit-transition: background 3s; transition: background 3s; }
+  #scene div { position: absolute; }
+  .sky-day-clear  { background: linear-gradient(#2f6fc4, #5ea2e0 55%, #9fd0f3) !important; }
+  .sky-day-partly { background: linear-gradient(#3b74b8, #6aa3d6 55%, #a9cde8) !important; }
+  .sky-day-cloudy { background: linear-gradient(#56636f, #7f8d9a 60%, #9aa7b2) !important; }
+  .sky-day-rain   { background: linear-gradient(#36414d, #56616d 60%, #6b7682) !important; }
+  .sky-day-storm  { background: linear-gradient(#1f242c, #353c47 60%, #474f5b) !important; }
+  .sky-day-snow   { background: linear-gradient(#7d8d9b, #aebcc7 60%, #cfd9e0) !important; }
+  .sky-day-fog    { background: linear-gradient(#8a959e, #aab3ba 60%, #c2c8cd) !important; }
+  .sky-night-clear, .sky-night-partly { background: linear-gradient(#03060f, #0a1328 60%, #16223f) !important; }
+  .sky-night-cloudy, .sky-night-fog   { background: linear-gradient(#0b0e13, #161b23 60%, #20262f) !important; }
+  .sky-night-rain, .sky-night-storm, .sky-night-snow { background: linear-gradient(#07090d, #11151c 60%, #1a1f27) !important; }
+
+  .sun { width: 190px; height: 190px; left: 50%; top: 50%; margin: -95px 0 0 -95px; border-radius: 50%;
+    background: radial-gradient(circle, #fffbe0 0%, #ffe27a 22%, rgba(255, 214, 90, .55) 38%, rgba(255, 200, 60, 0) 70%);
+    -webkit-animation: pulse 7s ease-in-out infinite alternate; animation: pulse 7s ease-in-out infinite alternate; }
+  @-webkit-keyframes pulse { from { -webkit-transform: scale(1); } to { -webkit-transform: scale(1.08); } }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.08); } }
+
+  .cloud { top: 0; left: 0; border-radius: 50%;
+    -webkit-animation: drift linear infinite; animation: drift linear infinite; }
+  @-webkit-keyframes drift { from { -webkit-transform: translateX(-600px); } to { -webkit-transform: translateX(1500px); } }
+  @keyframes drift { from { transform: translateX(-600px); } to { transform: translateX(1500px); } }
+
+  .drop { top: -80px; width: 2px; height: 60px;
+    background: linear-gradient(rgba(200, 225, 255, 0), rgba(200, 225, 255, .55));
+    -webkit-animation: fall linear infinite; animation: fall linear infinite; }
+  @-webkit-keyframes fall { to { -webkit-transform: translate(-60px, 1100px); } }
+  @keyframes fall { to { transform: translate(-60px, 1100px); } }
+
+  .flake { top: -20px; border-radius: 50%; background: rgba(255, 255, 255, .85);
+    -webkit-animation: snow linear infinite; animation: snow linear infinite; }
+  @-webkit-keyframes snow { 50% { -webkit-transform: translate(30px, 550px); } to { -webkit-transform: translate(-10px, 1100px); } }
+  @keyframes snow { 50% { transform: translate(30px, 550px); } to { transform: translate(-10px, 1100px); } }
+
+  .flash { top: 0; left: 0; right: 0; bottom: 0; background: #fff; opacity: 0;
+    -webkit-animation: flash 11s infinite; animation: flash 11s infinite; }
+  @-webkit-keyframes flash { 0%, 90%, 92.5%, 100% { opacity: 0; } 91% { opacity: .35; } 93% { opacity: .2; } }
+  @keyframes flash { 0%, 90%, 92.5%, 100% { opacity: 0; } 91% { opacity: .35; } 93% { opacity: .2; } }
+
+  .star { border-radius: 50%; background: #fff; }
+  .star.tw { -webkit-animation: twinkle 4s ease-in-out infinite alternate; animation: twinkle 4s ease-in-out infinite alternate; }
+  @-webkit-keyframes twinkle { from { opacity: .2; } to { opacity: 1; } }
+  @keyframes twinkle { from { opacity: .2; } to { opacity: 1; } }
+
+  .moon { width: 110px; height: 110px; left: 50%; top: 50%; margin: -55px 0 0 -55px; border-radius: 50%; overflow: hidden;
+    background: radial-gradient(circle at 38% 38%, #fffdf0, #ece6cf 55%, #cfc7aa);
+    box-shadow: 0 0 50px rgba(255, 250, 220, .35), 0 0 120px rgba(255, 250, 220, .15); }
+  .moon .shade { top: 0; width: 110px; height: 110px; border-radius: 50%; background: rgba(6, 10, 22, .93); }
+  .moon .crater { border-radius: 50%; background: rgba(160, 150, 120, .25); }
 
   @media (orientation: portrait) {
+    .top { -webkit-flex-wrap: wrap; flex-wrap: wrap; }
+    .clock { -webkit-flex: 1 1 100%; flex: 1 1 100%; margin: 0 0 14px; }
     .bottom { -webkit-flex-direction: column; flex-direction: column; }
-    .agenda { margin-right: 0; margin-bottom: 16px; }
-    .side { -webkit-flex: none; flex: none; -webkit-flex-direction: row; flex-direction: row; }
-    .hours { margin-bottom: 0; margin-right: 16px; }
-    .side > .card { -webkit-flex: 1; flex: 1; }
+    .agenda { margin-right: 0; margin-bottom: 14px; }
   }
 </style>
 </head>
 <body>
+<div id="scene"></div>
 <div class="wrap flex col">
   <div class="top flex">
     <div class="clock card flex col">
@@ -91,14 +152,15 @@
       <div>
         <div class="temp" id="wTemp">--°</div>
         <div class="desc" id="wDesc"></div>
-        <div class="minmax" id="wMinMax"></div>
       </div>
+      <div class="orb" id="orb"></div>
+      <div class="facts" id="wFacts"></div>
     </div>
   </div>
   <div class="bottom flex grow">
     <div class="agenda card" id="agenda"><h2>Agenda</h2><div class="empty">Chargement…</div></div>
     <div class="side flex col">
-      <div class="hours card flex col grow"><h2>Prochaines heures</h2><div class="flex col grow" id="hours"></div></div>
+      <div class="hours card flex col grow"><h2>Heure par heure <span class="hint">glisse ↕</span></h2><div class="hlist grow" id="hours"></div></div>
       <div class="card"><h2>Prochains jours</h2><div id="days"></div></div>
     </div>
   </div>
@@ -111,71 +173,166 @@ var JOURS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
 var MOIS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
 var DATA = null;
 
+function $(id) { return document.getElementById(id); }
 function pad(n) { return n < 10 ? '0' + n : '' + n; }
 function hm(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
 function esc(s) { return String(s).replace(/[&<>"]/g, function (c) {
   return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 function dayStart(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function rnd(a, b) { return a + Math.random() * (b - a); }
 
 function wmo(code, day) {
   var c = code;
-  if (c === 0) return [day ? '☀️' : '🌙', 'Ciel dégagé'];
-  if (c === 1) return [day ? '🌤️' : '🌙', 'Plutôt dégagé'];
-  if (c === 2) return ['⛅', 'Partiellement nuageux'];
-  if (c === 3) return ['☁️', 'Couvert'];
-  if (c === 45 || c === 48) return ['🌫️', 'Brouillard'];
-  if (c >= 51 && c <= 57) return ['🌦️', 'Bruine'];
-  if (c >= 61 && c <= 67) return ['🌧️', 'Pluie'];
-  if (c >= 71 && c <= 77) return ['🌨️', 'Neige'];
-  if (c >= 80 && c <= 82) return ['🌦️', 'Averses'];
-  if (c === 85 || c === 86) return ['🌨️', 'Averses de neige'];
-  if (c >= 95) return ['⛈️', 'Orage'];
-  return ['❔', ''];
+  if (c === 0) return [day ? '☀️' : '🌙', 'Ciel dégagé', 'clear'];
+  if (c === 1) return [day ? '🌤️' : '🌙', 'Plutôt dégagé', 'clear'];
+  if (c === 2) return [day ? '⛅' : '☁️', 'Partiellement nuageux', 'partly'];
+  if (c === 3) return ['☁️', 'Couvert', 'cloudy'];
+  if (c === 45 || c === 48) return ['🌫️', 'Brouillard', 'fog'];
+  if (c >= 51 && c <= 57) return ['🌦️', 'Bruine', 'rain'];
+  if (c >= 61 && c <= 67) return ['🌧️', 'Pluie', 'rain'];
+  if (c >= 71 && c <= 77) return ['🌨️', 'Neige', 'snow'];
+  if (c >= 80 && c <= 82) return ['🌦️', 'Averses', 'rain'];
+  if (c === 85 || c === 86) return ['🌨️', 'Averses de neige', 'snow'];
+  if (c >= 95) return ['⛈️', 'Orage', 'storm'];
+  return ['❔', '', 'cloudy'];
 }
 
+/* ---------- Horloge ---------- */
 function tick() {
   var d = new Date();
-  document.getElementById('hm').textContent = hm(d);
-  document.getElementById('s').textContent = pad(d.getSeconds());
-  document.getElementById('date').textContent =
-    cap(JOURS[d.getDay()]) + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()] + ' ' + d.getFullYear();
+  $('hm').textContent = hm(d);
+  $('s').textContent = pad(d.getSeconds());
+  $('date').textContent = cap(JOURS[d.getDay()]) + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()] + ' ' + d.getFullYear();
   var h = d.getHours();
   document.body.className = (h >= 23 || h < 6) ? 'dim' : '';
-  if (d.getSeconds() === 0 && DATA) renderAgenda(); // met à jour "passé / en cours / dans X"
+  if (d.getSeconds() === 0 && DATA) renderAgenda();
 }
 
+/* ---------- Lune ---------- */
+function moonPhase(d) { // 0 = nouvelle lune, 0.5 = pleine lune
+  var syn = 29.530588853, ref = Date.UTC(2000, 0, 6, 18, 14);
+  var p = ((d.getTime() - ref) / 86400000 % syn) / syn;
+  return p < 0 ? p + 1 : p;
+}
+
+/* ---------- Fond animé ---------- */
+var sceneKey = '';
+function cloudHtml(n, color, top0, top1, wMin, wMax) {
+  var h = '';
+  for (var i = 0; i < n; i++) {
+    var w = rnd(wMin, wMax), dur = rnd(110, 200);
+    h += '<div class="cloud" style="width:' + Math.round(w) + 'px;height:' + Math.round(w * .38) + 'px;top:' +
+      Math.round(rnd(top0, top1)) + 'px;background:radial-gradient(ellipse at center,' + color + ' 0%,rgba(0,0,0,0) 68%);' +
+      '-webkit-animation-duration:' + dur + 's;animation-duration:' + dur + 's;' +
+      '-webkit-animation-delay:-' + Math.round(rnd(0, dur)) + 's;animation-delay:-' + Math.round(rnd(0, dur)) + 's"></div>';
+  }
+  return h;
+}
+function buildScene(type, isDay) {
+  var p = moonPhase(new Date());
+  var key = type + (isDay ? 'd' : 'n') + Math.round(p * 20);
+  if (key === sceneKey) return;
+  sceneKey = key;
+  var sc = $('scene'), h = '', orb = '', i;
+  sc.className = 'sky-' + (isDay ? 'day' : 'night') + '-' + type;
+
+  if (!isDay && (type === 'clear' || type === 'partly')) { // étoiles + lune
+    for (i = 0; i < 90; i++) {
+      var sz = rnd(1, 2.6);
+      h += '<div class="star' + (i % 4 === 0 ? ' tw' : '') + '" style="left:' + rnd(0, 100).toFixed(1) + '%;top:' +
+        rnd(0, 75).toFixed(1) + '%;width:' + sz.toFixed(1) + 'px;height:' + sz.toFixed(1) + 'px;opacity:' + rnd(.3, .9).toFixed(2) +
+        ';-webkit-animation-delay:-' + rnd(0, 4).toFixed(1) + 's;animation-delay:-' + rnd(0, 4).toFixed(1) + 's"></div>';
+    }
+    var illum = (1 - Math.cos(2 * Math.PI * p)) / 2;
+    if (illum > 0.04) {
+      var D = 110, off = p < 0.5 ? -D * (p / 0.5) : D * ((1 - p) / 0.5);
+      orb = '<div class="moon"><div class="crater" style="width:18px;height:18px;left:30px;top:28px"></div>' +
+        '<div class="crater" style="width:12px;height:12px;left:62px;top:56px"></div>' +
+        '<div class="crater" style="width:22px;height:22px;left:44px;top:70px"></div>' +
+        '<div class="shade" style="left:' + Math.round(off) + 'px"></div></div>';
+    }
+  }
+  if (isDay && (type === 'clear' || type === 'partly')) orb = '<div class="sun"></div>';
+  $('orb').innerHTML = orb;
+  $('wIcon').style.display = orb ? 'none' : '';
+
+  var light = isDay ? 'rgba(255,255,255,.85)' : 'rgba(150,160,180,.35)';
+  var grey = isDay ? 'rgba(215,220,228,.8)' : 'rgba(90,98,112,.5)';
+  var dark = isDay ? 'rgba(120,128,140,.85)' : 'rgba(60,66,78,.6)';
+  if (type === 'clear' && isDay) h += cloudHtml(2, light, 380, 620, 280, 380);
+  if (type === 'partly') h += cloudHtml(6, light, 20, 520, 320, 520);
+  if (type === 'cloudy' || type === 'fog') h += cloudHtml(9, grey, -60, 560, 420, 700);
+  if (type === 'rain' || type === 'snow') h += cloudHtml(8, dark, -80, 300, 450, 750);
+  if (type === 'storm') h += cloudHtml(9, isDay ? 'rgba(70,76,88,.9)' : 'rgba(40,44,54,.8)', -80, 300, 450, 750);
+  if (type === 'fog') h += cloudHtml(6, isDay ? 'rgba(235,238,240,.6)' : 'rgba(120,125,132,.35)', 300, 760, 700, 1000);
+
+  if (type === 'rain' || type === 'storm') {
+    for (i = 0; i < (type === 'storm' ? 70 : 55); i++) {
+      var dd = rnd(.55, .9);
+      h += '<div class="drop" style="left:' + rnd(0, 106).toFixed(1) + '%;-webkit-animation-duration:' + dd.toFixed(2) +
+        's;animation-duration:' + dd.toFixed(2) + 's;-webkit-animation-delay:-' + rnd(0, 1).toFixed(2) +
+        's;animation-delay:-' + rnd(0, 1).toFixed(2) + 's"></div>';
+    }
+  }
+  if (type === 'storm') h += '<div class="flash"></div>';
+  if (type === 'snow') {
+    for (i = 0; i < 60; i++) {
+      var fs = rnd(3, 7), fd = rnd(8, 16);
+      h += '<div class="flake" style="left:' + rnd(0, 100).toFixed(1) + '%;width:' + fs.toFixed(1) + 'px;height:' + fs.toFixed(1) +
+        'px;-webkit-animation-duration:' + fd.toFixed(1) + 's;animation-duration:' + fd.toFixed(1) + 's;-webkit-animation-delay:-' +
+        rnd(0, fd).toFixed(1) + 's;animation-delay:-' + rnd(0, fd).toFixed(1) + 's"></div>';
+    }
+  }
+  sc.innerHTML = h;
+}
+
+/* ---------- Météo ---------- */
 function renderWeather(w) {
   if (!w || !w.current) return;
   var cur = w.current, ic = wmo(cur.weather_code, cur.is_day), dl = w.daily;
-  document.getElementById('wIcon').textContent = ic[0];
-  document.getElementById('wTemp').textContent = Math.round(cur.temperature_2m) + '°';
-  document.getElementById('wDesc').textContent = ic[1] + ' · ressenti ' + Math.round(cur.apparent_temperature) + '°';
-  document.getElementById('wMinMax').innerHTML = 'Vent ' + Math.round(cur.wind_speed_10m) + ' km/h · ☀ ' +
-    dl.sunrise[0].slice(11) + ' – ' + dl.sunset[0].slice(11);
+  var forced = /scene=([a-z]+)-(day|night)/.exec(location.search); // test : ?scene=rain-night
+  buildScene(forced ? forced[1] : ic[2], forced ? forced[2] === 'day' : cur.is_day === 1);
+
+  $('wIcon').textContent = ic[0];
+  $('wTemp').textContent = Math.round(cur.temperature_2m) + '°';
+  $('wDesc').textContent = ic[1] + ' · ressenti ' + Math.round(cur.apparent_temperature) + '°';
+  $('wFacts').innerHTML =
+    '<div class="fact"><span class="muted">Min / Max</span> <b>' + Math.round(dl.temperature_2m_min[0]) + '° / ' + Math.round(dl.temperature_2m_max[0]) + '°</b></div>' +
+    '<div class="fact"><span class="muted">Pluie</span> <b>' + dl.precipitation_probability_max[0] + ' %</b> · <span class="muted">Vent</span> <b>' + Math.round(cur.wind_speed_10m) + ' km/h</b></div>' +
+    '<div class="fact"><span class="muted">Soleil</span> <b>' + dl.sunrise[0].slice(11) + ' – ' + dl.sunset[0].slice(11) + '</b></div>';
 
   var hr = w.hourly, curHour = cur.time.slice(0, 13), i0 = 0, html = '';
   for (var i = 0; i < hr.time.length; i++) { if (hr.time[i].slice(0, 13) >= curHour) { i0 = i + 1; break; } }
-  for (var k = i0; k < i0 + 7 && k < hr.time.length; k++) {
+  for (var k = i0; k < i0 + 48 && k < hr.time.length; k++) {
+    var hh = hr.time[k].slice(11, 13);
+    if (hh === '00') {
+      var dd = new Date(hr.time[k].slice(0, 10) + 'T12:00:00');
+      var td = dayStart(new Date()), dname = dayStart(dd) - td < 1.5 * 86400000 ? 'Demain' : cap(JOURS[dd.getDay()]);
+      html += '<div class="hsep">' + dname + '</div>';
+    }
     var hi = wmo(hr.weather_code[k], hr.is_day[k]), p = hr.precipitation_probability[k];
-    html += '<div class="hr flex"><div class="t">' + hr.time[k].slice(11, 13) + 'h</div><div class="i">' + hi[0] +
+    html += '<div class="hr flex"><div class="t">' + hh + 'h</div><div class="i">' + hi[0] +
       '</div><div class="v">' + Math.round(hr.temperature_2m[k]) + '°</div><div class="p">' +
       (p >= 20 ? '💧 ' + p + '%' : '') + '</div></div>';
   }
-  document.getElementById('hours').innerHTML = html;
+  var box = $('hours'), keep = box.scrollTop;
+  box.innerHTML = html;
+  box.scrollTop = keep;
 
   html = '';
   for (var j = 0; j < dl.time.length && j < 3; j++) {
-    var di = wmo(dl.weather_code[j], 1), dd = new Date(dl.time[j] + 'T12:00:00');
-    var name = j === 0 ? "Aujourd'hui" : (j === 1 ? 'Demain' : JOURS[dd.getDay()]);
+    var di = wmo(dl.weather_code[j], 1), dx = new Date(dl.time[j] + 'T12:00:00');
+    var name = j === 0 ? "Aujourd'hui" : (j === 1 ? 'Demain' : cap(JOURS[dx.getDay()]));
     html += '<div class="dl flex"><div class="n">' + name + '</div><div class="i">' + di[0] + '</div><div class="v">' +
       Math.round(dl.temperature_2m_max[j]) + '° <span>/ ' + Math.round(dl.temperature_2m_min[j]) + '°</span></div>' +
       '<div class="p">' + (dl.precipitation_probability_max[j] >= 20 ? '💧 ' + dl.precipitation_probability_max[j] + '%' : '') +
       '</div></div>';
   }
-  document.getElementById('days').innerHTML = html;
+  $('days').innerHTML = html;
 }
 
+/* ---------- Agenda ---------- */
 function dans(ms) {
   var m = Math.round(ms / 60000);
   if (m < 60) return 'dans ' + m + ' min';
@@ -194,37 +351,44 @@ function evHtml(e, now) {
 }
 
 function renderAgenda() {
-  var now = Date.now(), t0 = dayStart(new Date()), d1 = t0 + 86400000, d2 = d1 + 86400000, d3 = d2 + 86400000;
-  var groups = [[], [], []], next = null;
-  for (var i = 0; i < DATA.events.length; i++) {
+  var now = Date.now(), t0 = dayStart(new Date()), DAY = 86400000, NDAYS = 8;
+  var groups = [], next = null, i, g;
+  for (g = 0; g < NDAYS; g++) groups.push([]);
+  for (i = 0; i < DATA.events.length; i++) {
     var e = DATA.events[i];
-    if (/^Semaine \d+/.test(e.title)) continue; // numéros de semaine masqués
+    if (/^Semaine \d+/.test(e.title)) continue;
     if (!next && !e.allDay && e.end > now) next = e;
-    if (e.start < d1 && e.end > t0) groups[0].push(e);
-    else if (e.start >= d1 && e.start < d2) groups[1].push(e);
-    else if (e.start >= d2 && e.start < d3) groups[2].push(e);
+    if (e.start < t0 + DAY && e.end > t0) { groups[0].push(e); continue; }
+    g = Math.floor((dayStart(new Date(e.start)) - t0) / DAY + 0.5);
+    if (g >= 1 && g < NDAYS) groups[g].push(e);
   }
-  var html = '';
+  var box = $('agenda'), html = '';
   if (next) {
     var ns = new Date(next.start), live = next.start <= now;
-    var jour = next.start < d1 ? '' : (next.start < d2 ? 'demain ' : JOURS[ns.getDay()] + ' ');
+    var jour = next.start < t0 + DAY ? '' : (next.start < t0 + 2 * DAY ? 'demain ' : JOURS[ns.getDay()] + ' ');
     html += '<div class="next"><div class="lbl">' + (live ? 'En cours' : 'Prochain') + '</div>' +
       '<div class="ttl">' + esc(next.title) + '</div><div class="info">' +
       (live ? "jusqu'à " + hm(new Date(next.end)) : jour + hm(ns) + ' · ' + dans(next.start - now)) +
       (next.location ? ' · ' + esc(next.location) : '') + '</div></div>';
   }
-  var after = new Date(d2);
-  var titles = ["Aujourd'hui", 'Demain', cap(JOURS[after.getDay()]) + ' ' + after.getDate()];
-  for (var g = 0; g < 3; g++) {
-    if (g === 2 && !groups[2].length) continue;
-    html += '<div class="day"><h2>' + titles[g] + '</h2>';
-    if (!groups[g].length) html += '<div class="empty">Rien de prévu</div>';
-    for (var j = 0; j < groups[g].length; j++) html += evHtml(groups[g][j], now);
-    html += '</div>';
+  function dayBlock(k, title) {
+    var b = '<div class="day"><h2>' + title + '</h2>';
+    if (!groups[k].length) b += '<div class="empty">Rien de prévu</div>';
+    for (var j = 0; j < groups[k].length; j++) b += evHtml(groups[k][j], now);
+    return b + '</div>';
   }
-  document.getElementById('agenda').innerHTML = html;
+  html += dayBlock(0, "Aujourd'hui") + dayBlock(1, 'Demain');
+  box.innerHTML = html;
+  // Jours suivants : on ajoute tant que ça tient dans le cadre
+  for (g = 2; g < NDAYS; g++) {
+    if (!groups[g].length) continue;
+    var dd = new Date(t0 + g * DAY + 12 * 3600000);
+    box.insertAdjacentHTML('beforeend', dayBlock(g, cap(JOURS[dd.getDay()]) + ' ' + dd.getDate()));
+    if (box.scrollHeight > box.clientHeight + 2) { box.removeChild(box.lastChild); break; }
+  }
 }
 
+/* ---------- Données (script Google, JSONP) ---------- */
 // L'identifiant du script Google est dans le lien (#AKfy...), jamais dans ce fichier public.
 function scriptId() {
   var h = (location.hash || '').replace(/^#/, '');
@@ -235,7 +399,7 @@ function scriptId() {
 }
 
 function setStatus(txt, err) {
-  var st = document.getElementById('status');
+  var st = $('status');
   st.className = 'status' + (err ? ' err' : '');
   st.textContent = txt;
 }
@@ -244,8 +408,7 @@ var reqN = 0;
 function load() {
   var id = scriptId();
   if (!id) {
-    document.getElementById('agenda').innerHTML =
-      '<h2>Configuration</h2><div class="empty">Ajoute l\'identifiant du script Google à la fin du lien : #AKfy…</div>';
+    $('agenda').innerHTML = '<h2>Configuration</h2><div class="empty">Ajoute l\'identifiant du script Google à la fin du lien : #AKfy…</div>';
     return;
   }
   var cbName = 'dashCb' + (++reqN), done = false;
@@ -271,9 +434,11 @@ tick();
 setInterval(tick, 1000);
 load();
 setInterval(load, 10 * 60 * 1000);                                   // données toutes les 10 min
-// Toucher l'écran ou revenir sur l'app = mise à jour immédiate (max 1 fois / 15 s)
+// Toucher l'écran (hors liste des heures) ou revenir sur l'app = mise à jour immédiate (max 1 fois / 15 s)
 var lastTap = 0;
-function refreshNow() {
+function inHours(el) { while (el) { if (el.id === 'hours') return true; el = el.parentNode; } return false; }
+function refreshNow(ev) {
+  if (ev && ev.target && inHours(ev.target)) return;
   var t = Date.now();
   if (t - lastTap < 15000) return;
   lastTap = t;
