@@ -2,9 +2,9 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Tableau">
 <title>Tableau de bord</title>
 <style>
@@ -18,8 +18,6 @@
   .col { -webkit-flex-direction: column; flex-direction: column; }
   .grow { -webkit-flex: 1; flex: 1; min-height: 0; min-width: 0; }
   .wrap { position: relative; z-index: 1; height: 100%; padding: 18px; }
-  /* La barre d'état iOS (heure, Wi-Fi, batterie) passe en transparent par-dessus le fond : on lui laisse sa place */
-  .wrap { padding-top: 18px; padding-top: calc(env(safe-area-inset-top, 0px) + 10px); }
   .card { background: rgba(10, 13, 18, .58); border: 1px solid rgba(255, 255, 255, .07);
     border-radius: 18px; padding: 14px 20px; }
   h2 { font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, .55); text-transform: uppercase;
@@ -111,7 +109,7 @@
   .dl .v span { color: rgba(255, 255, 255, .5); }
   .dl .p { font-size: 14px; color: #74c0fc; }
 
-  .status { position: fixed; z-index: 2; right: 12px; bottom: 3px; font-size: 14px; color: rgba(255, 255, 255, .7); }
+  .status { position: fixed; z-index: 2; right: 12px; bottom: 3px; font-size: 11px; color: rgba(255, 255, 255, .3); }
   .status.err { color: #ff6b6b; }
 
   /* ---------- Veille : écran noir, plus rien ne bouge ---------- */
@@ -219,7 +217,7 @@
 <script>
 // ES5 uniquement (Safari des vieux iPad)
 if (location.search.indexOf('apercu') >= 0) { // captures d'écran : taille iPad fixe
-  document.documentElement.style.height = document.body.style.height = '768px'; // iPad en plein écran (la barre d'état passe par-dessus)
+  document.documentElement.style.height = document.body.style.height = '748px'; // iPad en plein écran (barre d'état comprise)
   document.documentElement.style.width = document.body.style.width = '1024px';
 }
 var JOURS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
@@ -527,7 +525,7 @@ function load() {
     renderWeather(d.weather);
     renderAgenda();
     renderTasks();
-    setStatus('MAJ ' + hm(new Date()) + ' · ' + sizeInfo(), false);
+    setStatus('MAJ ' + hm(new Date()), false);
   }, function (msg) { setStatus(msg + ' — nouvel essai bientôt', true); });
 }
 
@@ -657,35 +655,13 @@ function refreshNow(ev) {
   setStatus('Mise à jour…', false);
   load();
 }
-// App « écran d'accueil » avec barre d'état transparente : iOS donne parfois une hauteur trop petite
-// (bande noire en bas). On prend la vraie hauteur de l'écran.
-function fitScreen() {
-  if (!navigator.standalone) return;
-  var land = window.innerWidth > window.innerHeight;
-  var H = land ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
-  var v = H > window.innerHeight ? H + 'px' : '';
-  document.documentElement.style.height = document.body.style.height = v;
-  $('scene').style.height = $('sleep').style.height = v;
-  $('scene').style.bottom = $('sleep').style.bottom = v ? 'auto' : '';
-}
-fitScreen();
-// Diagnostic temporaire (bande noire) : fenêtre / écran / app / décalages / marge du haut
-function sizeInfo() {
-  var t = document.createElement('div');
-  t.style.cssText = 'position:fixed;top:0;height:0;padding-top:env(safe-area-inset-top);visibility:hidden';
-  document.body.appendChild(t);
-  var sa = t.offsetHeight; document.body.removeChild(t);
-  return window.innerWidth + 'x' + window.innerHeight + ' / ' + screen.width + 'x' + screen.height +
-    ' / ' + (navigator.standalone ? 'app' : 'web') + ' / y' + window.pageYOffset + ',' + document.body.scrollTop +
-    ' / h' + document.documentElement.clientHeight + ' / sa' + sa;
-}
 // Taille de l'écran qui change (rotation…) : on recalcule ce qui tient dans l'agenda
 var rsT = null;
 window.addEventListener('resize', function () {
   clearTimeout(rsT);
-  rsT = setTimeout(function () { fitScreen(); if (DATA) renderAgenda(); }, 300);
+  rsT = setTimeout(function () { if (DATA) renderAgenda(); }, 300);
 }, false);
-window.addEventListener('orientationchange', function () { setTimeout(function () { fitScreen(); if (DATA) renderAgenda(); }, 500); }, false);
+window.addEventListener('orientationchange', function () { setTimeout(function () { if (DATA) renderAgenda(); }, 500); }, false);
 document.addEventListener('touchend', refreshNow, false);
 document.addEventListener('click', refreshNow, false);
 document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshNow(); }, false);
