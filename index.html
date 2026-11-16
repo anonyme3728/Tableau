@@ -48,7 +48,9 @@
   /* ---------- Bas : agenda + prévisions ---------- */
   .agenda { -webkit-flex: 1.3; flex: 1.3; margin-right: 14px; overflow: hidden; }
   #agenda { overflow: hidden; }
-  .tabs { margin-bottom: 2px; }
+  .tabs { margin-bottom: 10px; -webkit-flex-shrink: 0; flex-shrink: 0; }
+  .tab.away { margin: 0 0 0 auto; letter-spacing: 1px; color: rgba(255, 255, 255, .5); }
+  #agenda > .next:first-child { margin-top: 0; }
   .tab { font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, .4); text-transform: uppercase; letter-spacing: 2px;
     padding: 2px 0 6px; margin-right: 24px; border-bottom: 2px solid transparent; cursor: pointer; }
   .tab.on { color: rgba(255, 255, 255, .85); border-bottom-color: #74c0fc; }
@@ -56,7 +58,7 @@
   #tasksPane { display: none; }
   .agenda.show-tasks #agenda { display: none; }
   .agenda.show-tasks #tasksPane { display: -webkit-flex; display: flex; }
-  .tadd { margin: 6px 0 6px; }
+  .tadd { margin: 0 0 6px; -webkit-flex-shrink: 0; flex-shrink: 0; }
   .tadd input { -webkit-flex: 1; flex: 1; min-width: 0; font-size: 18px; color: #fff; background: rgba(255, 255, 255, .08);
     border: 1px solid rgba(255, 255, 255, .14); border-radius: 10px; padding: 9px 12px; outline: none;
     -webkit-appearance: none; -webkit-user-select: text; user-select: text; font-family: inherit; }
@@ -81,7 +83,7 @@
   .next .lbl { font-size: 12px; color: #a5d8ff; text-transform: uppercase; letter-spacing: 2px; }
   .next .ttl { font-size: 23px; font-weight: 600; margin-top: 2px; }
   .next .info { font-size: 15px; color: rgba(255, 255, 255, .75); }
-  .day { margin-top: 8px; }
+  .day { margin-top: 14px; }
   .ev { -webkit-align-items: center; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255, 255, 255, .07); }
   .ev:last-child { border-bottom: 0; }
   .ev .bar { width: 5px; height: 30px; border-radius: 3px; margin-right: 12px; -webkit-flex-shrink: 0; flex-shrink: 0; }
@@ -198,7 +200,7 @@
   </div>
   <div class="bottom flex grow">
     <div class="agenda card flex col" id="agendaCard">
-      <div class="tabs flex"><div class="tab on" id="tabA">Agenda</div><div class="tab" id="tabT">Tâches<b id="tcount" style="display:none"></b></div></div>
+      <div class="tabs flex"><div class="tab on" id="tabA">Agenda</div><div class="tab" id="tabT">Tâches<b id="tcount" style="display:none"></b></div><div class="tab away" id="awayBtn">🌙 Je pars</div></div>
       <div class="grow" id="agenda"><div class="empty">Chargement…</div></div>
       <div class="grow col" id="tasksPane">
         <form class="tadd flex" id="taddForm"><input id="taddIn" type="text" placeholder="Nouvelle tâche…" maxlength="200" autocomplete="off"><button type="submit">Ajouter</button></form>
@@ -258,6 +260,7 @@ function tick() {
   }
   document.body.className = sl ? 'sleep' : ((h >= 23 && location.search.indexOf('nodim') < 0) ? 'dim' : '');
   if (sl) return;
+  if (window.pageYOffset && document.activeElement !== $('taddIn')) window.scrollTo(0, 0); // pas de page décalée
   if (tab === 'taches' && Date.now() - lastTouch > 3 * 60000 && document.activeElement !== $('taddIn')) showTab('agenda');
   $('hm').textContent = hm(d);
   $('s').textContent = pad(d.getSeconds());
@@ -267,7 +270,7 @@ function tick() {
 
 /* ---------- Veille ---------- */
 // Écran noir la nuit (0 h – 9 h) et pendant les événements à heure fixe de l'agenda (je ne suis pas là).
-// Toucher l'écran noir = rallumé 10 min. Tests : ?veille (forcer), ?noveille (désactiver).
+// Toucher l'écran noir = rallumé (voir wakeTap). Tests : ?veille (forcer), ?noveille (désactiver).
 var sleeping = false, wakeUntil = 0;
 function awayEvent(now) {
   if (!DATA || !DATA.events) return null;
@@ -281,6 +284,7 @@ function shouldSleep(d) {
   var q = location.search;
   if (q.indexOf('noveille') >= 0) return false;
   if (q.indexOf('veille') >= 0) return true;
+  if (manualSleep) return true;
   if (d.getTime() < wakeUntil) return false;
   return d.getHours() < 9 || !!awayEvent(d.getTime());
 }
@@ -515,6 +519,7 @@ function load() {
   jsonp('', function (d) {
     DATA = d;
     TASKS = d.tasks || null;
+    TASKS_ERR = d.tasksError || '';
     renderWeather(d.weather);
     renderAgenda();
     renderTasks();
@@ -536,7 +541,7 @@ $('tabA').addEventListener('click', function () { showTab('agenda'); }, false);
 $('tabT').addEventListener('click', function () { showTab('taches'); }, false);
 
 /* ---------- Tâches (Google Tasks, liste « Mes tâches ») ---------- */
-var TASKS = null, doneIds = {}, tmpN = 0;
+var TASKS = null, TASKS_ERR = '', doneIds = {}, pending = [], tmpN = 0;
 function dueText(due) {
   var d = new Date(due.slice(0, 10) + 'T12:00:00'), diff = Math.round((dayStart(d) - dayStart(new Date())) / 86400000);
   if (diff < 0) return ['En retard · ' + JOURS[d.getDay()] + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()], true];
@@ -545,14 +550,14 @@ function dueText(due) {
   return [cap(JOURS[d.getDay()]) + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()], false];
 }
 function renderTasks() {
-  var list = [], i;
+  var list = pending.slice(), i;
   if (TASKS) for (i = 0; i < TASKS.length; i++) if (!doneIds[TASKS[i].id]) list.push(TASKS[i]);
   var c = $('tcount');
   c.textContent = list.length;
   c.style.display = list.length ? '' : 'none';
   var box = $('tlist'), keep = box.scrollTop, html = '';
-  if (!TASKS) {
-    html = '<div class="empty">' + (DATA ? 'Tâches indisponibles (voir INSTALLATION.md)' : 'Chargement…') + '</div>';
+  if (!TASKS && !list.length) {
+    html = '<div class="empty">' + (DATA ? 'Tâches indisponibles' + (TASKS_ERR ? ' : ' + esc(TASKS_ERR) : '') : 'Chargement…') + '</div>';
   } else if (!list.length) {
     html = '<div class="empty">Rien à faire 🎉</div>';
   }
@@ -578,9 +583,11 @@ $('tlist').addEventListener('click', function (ev) {
   var c = $('tcount'), n = parseInt(c.textContent, 10) - 1;
   c.textContent = n; c.style.display = n > 0 ? '' : 'none';
   setTimeout(renderTasks, 700);
+  function failed(msg) { delete doneIds[id]; renderTasks(); setStatus('Tâche non enregistrée' + (msg ? ' : ' + msg : ''), true); }
   jsonp('action=doneTask&id=' + encodeURIComponent(id), function (d) {
-    if (d && d.tasks) { TASKS = d.tasks; renderTasks(); }
-  }, function () { delete doneIds[id]; renderTasks(); setStatus('Tâche non enregistrée — réessaie', true); });
+    if (!d || d.error) return failed(d && d.error);
+    if (d.tasks) { TASKS = d.tasks; renderTasks(); }
+  }, failed);
 }, false);
 $('taddForm').addEventListener('submit', function (ev) {
   ev.preventDefault();
@@ -588,22 +595,42 @@ $('taddForm').addEventListener('submit', function (ev) {
   if (!title) return;
   inp.value = '';
   var tmp = { id: 'tmp' + (++tmpN), title: title, wait: true };
-  if (!TASKS) TASKS = [];
-  TASKS.unshift(tmp);
+  pending.unshift(tmp); // reste affichée jusqu'à la réponse de Google, même si une mise à jour arrive entre-temps
   renderTasks();
-  jsonp('action=addTask&title=' + encodeURIComponent(title), function (d) {
-    if (d && d.tasks) TASKS = d.tasks;
-    renderTasks();
-  }, function () {
-    for (var i = 0; i < TASKS.length; i++) if (TASKS[i] === tmp) TASKS.splice(i, 1);
-    renderTasks();
+  function drop() { for (var i = 0; i < pending.length; i++) if (pending[i] === tmp) pending.splice(i, 1); }
+  function failed(msg) {
+    drop(); renderTasks();
     if (!inp.value) inp.value = title;
-    setStatus('Tâche non ajoutée — réessaie', true);
-  });
+    setStatus('Tâche non ajoutée' + (msg ? ' : ' + msg : ''), true);
+  }
+  jsonp('action=addTask&title=' + encodeURIComponent(title), function (d) {
+    if (!d || d.error) return failed(d && d.error);
+    drop();
+    if (d.tasks) TASKS = d.tasks;
+    renderTasks();
+  }, failed);
 }, false);
+// Clavier fermé : iOS laisse parfois la page décalée (bande noire en bas) → on la remet en place
+$('taddIn').addEventListener('blur', function () { setTimeout(function () { window.scrollTo(0, 0); }, 50); }, false);
 
-/* ---------- Écran noir : toucher = rallumé 10 min ---------- */
-function wakeTap() { if (sleeping) { wakeUntil = Date.now() + 10 * 60000; tick(); } }
+/* ---------- Écran noir ---------- */
+// Toucher l'écran noir : rallumé jusqu'à la fin de l'événement en cours (la nuit : 10 min).
+// Bouton « Je pars » : écran noir jusqu'au prochain toucher.
+var manualSleep = false;
+try { manualSleep = localStorage.getItem('dash-away') === '1'; } catch (e) {}
+function setManual(v) {
+  manualSleep = v;
+  try { if (v) localStorage.setItem('dash-away', '1'); else localStorage.removeItem('dash-away'); } catch (e) {}
+}
+var awayAt = 0;
+$('awayBtn').addEventListener('click', function () { wakeUntil = 0; awayAt = Date.now(); setManual(true); tick(); }, false);
+function wakeTap() {
+  if (!sleeping || Date.now() - awayAt < 1500) return; // ignore le toucher qui vient d'activer « Je pars »
+  var now = Date.now(), ev = awayEvent(now);
+  setManual(false);
+  wakeUntil = ev ? ev.end : (new Date().getHours() < 9 ? now + 10 * 60000 : 0);
+  tick();
+}
 $('sleep').addEventListener('touchend', wakeTap, false);
 $('sleep').addEventListener('click', wakeTap, false);
 document.addEventListener('touchstart', function () { lastTouch = Date.now(); }, false);
