@@ -469,6 +469,22 @@ document.addEventListener('touchend', refreshNow, false);
 document.addEventListener('click', refreshNow, false);
 document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshNow(); }, false);
 window.addEventListener('pageshow', function (e) { if (e.persisted) refreshNow(); }, false);
+// Empêche l'écran de s'éteindre (Screen Wake Lock, iPadOS 16.4+)
+var wakeLock = null;
+function keepAwake() {
+  try {
+    if (wakeLock || document.hidden || !('wakeLock' in navigator)) return;
+    navigator.wakeLock.request('screen').then(function (l) {
+      wakeLock = l;
+      l.addEventListener('release', function () { wakeLock = null; });
+    }, function () {});
+  } catch (e) {}
+}
+keepAwake();
+document.addEventListener('touchend', keepAwake, false);
+document.addEventListener('click', keepAwake, false);
+document.addEventListener('visibilitychange', keepAwake, false);
+setInterval(keepAwake, 60000);
 setTimeout(function () { try { window.location.reload(); } catch (e) {} }, 6 * 3600 * 1000); // rechargement complet toutes les 6 h
 </script>
 </body>
