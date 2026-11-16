@@ -271,6 +271,19 @@ tick();
 setInterval(tick, 1000);
 load();
 setInterval(load, 10 * 60 * 1000);                                   // données toutes les 10 min
+// Toucher l'écran ou revenir sur l'app = mise à jour immédiate (max 1 fois / 15 s)
+var lastTap = 0;
+function refreshNow() {
+  var t = Date.now();
+  if (t - lastTap < 15000) return;
+  lastTap = t;
+  setStatus('Mise à jour…', false);
+  load();
+}
+document.addEventListener('touchend', refreshNow, false);
+document.addEventListener('click', refreshNow, false);
+document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshNow(); }, false);
+window.addEventListener('pageshow', function (e) { if (e.persisted) refreshNow(); }, false);
 setTimeout(function () { try { window.location.reload(); } catch (e) {} }, 6 * 3600 * 1000); // rechargement complet toutes les 6 h
 </script>
 </body>
