@@ -480,11 +480,24 @@ function keepAwake() {
     }, function () {});
   } catch (e) {}
 }
-keepAwake();
-document.addEventListener('touchend', keepAwake, false);
-document.addEventListener('click', keepAwake, false);
-document.addEventListener('visibilitychange', keepAwake, false);
-setInterval(keepAwake, 60000);
+// Repli : petite vidéo muette en boucle (le Wake Lock ne marche pas toujours
+// sur iPad, surtout en app « écran d'accueil »)
+var awakeVid = document.createElement('video');
+awakeVid.src = 'awake.mp4';
+awakeVid.muted = true; awakeVid.loop = true; awakeVid.autoplay = true;
+awakeVid.setAttribute('muted', ''); awakeVid.setAttribute('playsinline', ''); awakeVid.setAttribute('webkit-playsinline', '');
+awakeVid.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none;';
+document.body.appendChild(awakeVid);
+function playVid() {
+  try { if (awakeVid.paused && !document.hidden) { var p = awakeVid.play(); if (p && p.catch) p.catch(function () {}); } } catch (e) {}
+}
+function stayAwake() { keepAwake(); playVid(); }
+stayAwake();
+document.addEventListener('touchstart', stayAwake, false);
+document.addEventListener('touchend', stayAwake, false);
+document.addEventListener('click', stayAwake, false);
+document.addEventListener('visibilitychange', stayAwake, false);
+setInterval(stayAwake, 20000);
 setTimeout(function () { try { window.location.reload(); } catch (e) {} }, 6 * 3600 * 1000); // rechargement complet toutes les 6 h
 </script>
 </body>
