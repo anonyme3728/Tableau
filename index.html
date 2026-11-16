@@ -198,6 +198,7 @@ function renderAgenda() {
   var groups = [[], [], []], next = null;
   for (var i = 0; i < DATA.events.length; i++) {
     var e = DATA.events[i];
+    if (/^Semaine \d+/.test(e.title)) continue; // numéros de semaine masqués
     if (!next && !e.allDay && e.end > now) next = e;
     if (e.start < d1 && e.end > t0) groups[0].push(e);
     else if (e.start >= d1 && e.start < d2) groups[1].push(e);
