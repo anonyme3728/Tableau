@@ -14,66 +14,94 @@
     -webkit-user-select: none; overflow: hidden; }
   body { -webkit-transition: opacity 2s; transition: opacity 2s; }
   body.dim { opacity: .35; }
-  .wrap { display: -webkit-flex; display: flex; height: 100%; padding: 28px; }
-  .left { -webkit-flex: 1.1; flex: 1.1; display: -webkit-flex; display: flex;
-    -webkit-flex-direction: column; flex-direction: column; padding-right: 28px; }
-  .right { -webkit-flex: 1; flex: 1; border-left: 1px solid #22262c; padding-left: 28px; overflow: hidden; }
-  .time { font-size: 150px; font-weight: 200; letter-spacing: -4px; line-height: 1; }
-  .sec { font-size: 40px; color: #6c757d; letter-spacing: 0; margin-left: 6px; }
-  .date { font-size: 30px; color: #adb5bd; margin-top: 8px; text-transform: capitalize; }
-  .wx { margin-top: auto; }
-  .now { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; }
-  .icon { font-size: 84px; margin-right: 18px; }
-  .temp { font-size: 76px; font-weight: 300; }
-  .desc { font-size: 22px; color: #adb5bd; margin-top: 4px; }
-  .minmax { font-size: 20px; color: #6c757d; margin-top: 4px; }
-  .hours { display: -webkit-flex; display: flex; margin-top: 22px; }
-  .h { -webkit-flex: 1; flex: 1; text-align: center; background: #14171b; border-radius: 12px;
-    padding: 10px 0; margin-right: 8px; }
-  .h:last-child { margin-right: 0; }
-  .h .t { font-size: 15px; color: #6c757d; }
-  .h .i { font-size: 28px; margin: 4px 0; }
-  .h .v { font-size: 19px; }
-  .h .p { font-size: 13px; color: #4dabf7; height: 16px; }
-  h2 { font-size: 15px; font-weight: 600; color: #6c757d; text-transform: uppercase;
-    letter-spacing: 2px; margin: 4px 0 12px; }
-  h2.more { margin-top: 26px; }
-  .ev { display: -webkit-flex; display: flex; padding: 12px 0; border-bottom: 1px solid #1b1f24; }
-  .ev .bar { width: 5px; border-radius: 3px; margin-right: 14px; -webkit-flex-shrink: 0; flex-shrink: 0; }
-  .ev .when { width: 92px; font-size: 18px; color: #adb5bd; -webkit-flex-shrink: 0; flex-shrink: 0; }
-  .ev .ttl { font-size: 21px; }
-  .ev .loc { font-size: 15px; color: #6c757d; margin-top: 2px; }
+  .flex { display: -webkit-flex; display: flex; }
+  .col { -webkit-flex-direction: column; flex-direction: column; }
+  .grow { -webkit-flex: 1; flex: 1; min-height: 0; min-width: 0; }
+  .wrap { height: 100%; padding: 20px; }
+  .card { background: #14171b; border-radius: 16px; padding: 16px 20px; }
+  h2 { font-size: 13px; font-weight: 600; color: #6c757d; text-transform: uppercase;
+    letter-spacing: 2px; margin-bottom: 8px; }
+
+  /* Haut : heure + météo actuelle */
+  .top { margin-bottom: 16px; -webkit-align-items: stretch; align-items: stretch; }
+  .clock { -webkit-flex: 1.25; flex: 1.25; margin-right: 16px; -webkit-justify-content: center; justify-content: center; }
+  .time { font-size: 120px; font-weight: 200; letter-spacing: -4px; line-height: .95; }
+  .sec { font-size: 36px; color: #6c757d; letter-spacing: 0; margin-left: 6px; }
+  .date { font-size: 26px; color: #adb5bd; margin-top: 6px; }
+  .now { -webkit-flex: 1; flex: 1; -webkit-align-items: center; align-items: center; }
+  .icon { font-size: 72px; margin-right: 16px; }
+  .temp { font-size: 64px; font-weight: 300; line-height: 1; }
+  .desc { font-size: 18px; color: #adb5bd; margin-top: 6px; }
+  .minmax { font-size: 16px; color: #6c757d; margin-top: 4px; }
+
+  /* Bas : agenda + prévisions */
+  .agenda { -webkit-flex: 1.25; flex: 1.25; margin-right: 16px; overflow: hidden; }
+  .side { -webkit-flex: 1; flex: 1; }
+  .next { background: #1c2a3a; border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; }
+  .next .lbl { font-size: 13px; color: #74c0fc; text-transform: uppercase; letter-spacing: 2px; }
+  .next .ttl { font-size: 24px; font-weight: 600; margin-top: 4px; }
+  .next .info { font-size: 16px; color: #adb5bd; margin-top: 2px; }
+  .day { margin-top: 10px; }
+  .ev { -webkit-align-items: center; align-items: center; padding: 8px 0; border-bottom: 1px solid #1f2328; }
+  .ev:last-child { border-bottom: 0; }
+  .ev .bar { width: 5px; height: 34px; border-radius: 3px; margin-right: 12px; -webkit-flex-shrink: 0; flex-shrink: 0; }
+  .ev .when { width: 84px; font-size: 17px; color: #adb5bd; -webkit-flex-shrink: 0; flex-shrink: 0; line-height: 1.15; }
+  .ev .when small { font-size: 13px; color: #6c757d; }
+  .ev .ttl { font-size: 19px; }
+  .ev .loc { font-size: 14px; color: #6c757d; }
   .ev.past { opacity: .35; }
   .ev.live .ttl { color: #fff; font-weight: 600; }
-  .empty { color: #495057; font-size: 19px; padding: 10px 0; }
-  .status { position: fixed; right: 12px; bottom: 8px; font-size: 12px; color: #343a40; }
+  .empty { color: #495057; font-size: 17px; padding: 6px 0; }
+
+  .hours { margin-bottom: 16px; }
+  .hr { -webkit-align-items: center; align-items: center; -webkit-flex: 1; flex: 1; border-bottom: 1px solid #1f2328; }
+  .hr:last-child { border-bottom: 0; }
+  .hr .t { width: 52px; font-size: 16px; color: #6c757d; }
+  .hr .i { width: 40px; font-size: 22px; }
+  .hr .v { -webkit-flex: 1; flex: 1; font-size: 19px; }
+  .hr .p { font-size: 14px; color: #4dabf7; }
+  .dl { -webkit-align-items: center; align-items: center; padding: 6px 0; }
+  .dl .n { width: 90px; font-size: 17px; color: #adb5bd; text-transform: capitalize; }
+  .dl .i { width: 40px; font-size: 24px; }
+  .dl .v { -webkit-flex: 1; flex: 1; font-size: 18px; }
+  .dl .v span { color: #6c757d; }
+  .dl .p { font-size: 14px; color: #4dabf7; }
+
+  .status { position: fixed; right: 12px; bottom: 4px; font-size: 11px; color: #343a40; }
   .status.err { color: #e03131; }
+
   @media (orientation: portrait) {
-    .wrap { -webkit-flex-direction: column; flex-direction: column; }
-    .left { padding-right: 0; -webkit-flex: none; flex: none; }
-    .wx { margin-top: 28px; }
-    .right { border-left: 0; border-top: 1px solid #22262c; padding: 24px 0 0; margin-top: 28px; }
+    .bottom { -webkit-flex-direction: column; flex-direction: column; }
+    .agenda { margin-right: 0; margin-bottom: 16px; }
+    .side { -webkit-flex: none; flex: none; -webkit-flex-direction: row; flex-direction: row; }
+    .hours { margin-bottom: 0; margin-right: 16px; }
+    .side > .card { -webkit-flex: 1; flex: 1; }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="left">
-    <div class="time"><span id="hm">--:--</span><span class="sec" id="s"></span></div>
-    <div class="date" id="date"></div>
-    <div class="wx">
-      <div class="now">
-        <div class="icon" id="wIcon"></div>
-        <div>
-          <div class="temp" id="wTemp">--°</div>
-          <div class="desc" id="wDesc"></div>
-          <div class="minmax" id="wMinMax"></div>
-        </div>
+<div class="wrap flex col">
+  <div class="top flex">
+    <div class="clock card flex col">
+      <div class="time"><span id="hm">--:--</span><span class="sec" id="s"></span></div>
+      <div class="date" id="date"></div>
+    </div>
+    <div class="now card flex">
+      <div class="icon" id="wIcon"></div>
+      <div>
+        <div class="temp" id="wTemp">--°</div>
+        <div class="desc" id="wDesc"></div>
+        <div class="minmax" id="wMinMax"></div>
       </div>
-      <div class="hours" id="hours"></div>
     </div>
   </div>
-  <div class="right" id="agenda"><h2>Aujourd'hui</h2><div class="empty">Chargement…</div></div>
+  <div class="bottom flex grow">
+    <div class="agenda card" id="agenda"><h2>Agenda</h2><div class="empty">Chargement…</div></div>
+    <div class="side flex col">
+      <div class="hours card flex col grow"><h2>Prochaines heures</h2><div class="flex col grow" id="hours"></div></div>
+      <div class="card"><h2>Prochains jours</h2><div id="days"></div></div>
+    </div>
+  </div>
 </div>
 <div class="status" id="status"></div>
 
@@ -88,6 +116,7 @@ function hm(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
 function esc(s) { return String(s).replace(/[&<>"]/g, function (c) {
   return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 function dayStart(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
+function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 function wmo(code, day) {
   var c = code;
@@ -110,62 +139,87 @@ function tick() {
   document.getElementById('hm').textContent = hm(d);
   document.getElementById('s').textContent = pad(d.getSeconds());
   document.getElementById('date').textContent =
-    JOURS[d.getDay()] + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()] + ' ' + d.getFullYear();
+    cap(JOURS[d.getDay()]) + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()] + ' ' + d.getFullYear();
   var h = d.getHours();
   document.body.className = (h >= 23 || h < 6) ? 'dim' : '';
-  if (d.getSeconds() === 0 && DATA) renderAgenda(); // met à jour "passé / en cours"
+  if (d.getSeconds() === 0 && DATA) renderAgenda(); // met à jour "passé / en cours / dans X"
 }
 
 function renderWeather(w) {
   if (!w || !w.current) return;
-  var cur = w.current, ic = wmo(cur.weather_code, cur.is_day);
+  var cur = w.current, ic = wmo(cur.weather_code, cur.is_day), dl = w.daily;
   document.getElementById('wIcon').textContent = ic[0];
   document.getElementById('wTemp').textContent = Math.round(cur.temperature_2m) + '°';
-  document.getElementById('wDesc').textContent = ic[1] + ' · ressenti ' + Math.round(cur.apparent_temperature) +
-    '° · vent ' + Math.round(cur.wind_speed_10m) + ' km/h';
-  var dl = w.daily;
-  document.getElementById('wMinMax').textContent = 'Min ' + Math.round(dl.temperature_2m_min[0]) +
-    '° · Max ' + Math.round(dl.temperature_2m_max[0]) + '° · Pluie ' + dl.precipitation_probability_max[0] +
-    '% · ☀ ' + dl.sunrise[0].slice(11) + ' – ' + dl.sunset[0].slice(11);
+  document.getElementById('wDesc').textContent = ic[1] + ' · ressenti ' + Math.round(cur.apparent_temperature) + '°';
+  document.getElementById('wMinMax').innerHTML = 'Vent ' + Math.round(cur.wind_speed_10m) + ' km/h · ☀ ' +
+    dl.sunrise[0].slice(11) + ' – ' + dl.sunset[0].slice(11);
 
   var hr = w.hourly, curHour = cur.time.slice(0, 13), i0 = 0, html = '';
   for (var i = 0; i < hr.time.length; i++) { if (hr.time[i].slice(0, 13) >= curHour) { i0 = i + 1; break; } }
-  for (var k = i0; k < i0 + 6 && k < hr.time.length; k++) {
+  for (var k = i0; k < i0 + 7 && k < hr.time.length; k++) {
     var hi = wmo(hr.weather_code[k], hr.is_day[k]), p = hr.precipitation_probability[k];
-    html += '<div class="h"><div class="t">' + hr.time[k].slice(11, 13) + 'h</div><div class="i">' + hi[0] +
+    html += '<div class="hr flex"><div class="t">' + hr.time[k].slice(11, 13) + 'h</div><div class="i">' + hi[0] +
       '</div><div class="v">' + Math.round(hr.temperature_2m[k]) + '°</div><div class="p">' +
-      (p >= 20 ? p + '%' : '') + '</div></div>';
+      (p >= 20 ? '💧 ' + p + '%' : '') + '</div></div>';
   }
   document.getElementById('hours').innerHTML = html;
+
+  html = '';
+  for (var j = 0; j < dl.time.length && j < 3; j++) {
+    var di = wmo(dl.weather_code[j], 1), dd = new Date(dl.time[j] + 'T12:00:00');
+    var name = j === 0 ? "Aujourd'hui" : (j === 1 ? 'Demain' : JOURS[dd.getDay()]);
+    html += '<div class="dl flex"><div class="n">' + name + '</div><div class="i">' + di[0] + '</div><div class="v">' +
+      Math.round(dl.temperature_2m_max[j]) + '° <span>/ ' + Math.round(dl.temperature_2m_min[j]) + '°</span></div>' +
+      '<div class="p">' + (dl.precipitation_probability_max[j] >= 20 ? '💧 ' + dl.precipitation_probability_max[j] + '%' : '') +
+      '</div></div>';
+  }
+  document.getElementById('days').innerHTML = html;
+}
+
+function dans(ms) {
+  var m = Math.round(ms / 60000);
+  if (m < 60) return 'dans ' + m + ' min';
+  var h = Math.floor(m / 60), r = m % 60;
+  if (h < 24) return 'dans ' + h + ' h' + (r ? ' ' + pad(r) : '');
+  return 'dans ' + Math.round(h / 24) + ' j';
 }
 
 function evHtml(e, now) {
   var s = new Date(e.start), en = new Date(e.end);
-  var cls = 'ev' + (e.end <= now ? ' past' : (e.start <= now ? ' live' : ''));
-  var when = e.allDay ? 'Journée' : hm(s);
+  var cls = 'ev flex' + (e.end <= now ? ' past' : (e.start <= now ? ' live' : ''));
+  var when = e.allDay ? 'Journée' : hm(s) + '<br><small>' + hm(en) + '</small>';
   return '<div class="' + cls + '"><div class="bar" style="background:' + esc(e.color) + '"></div>' +
-    '<div class="when">' + when + (e.allDay ? '' : '<br><span style="font-size:14px;color:#6c757d">' + hm(en) + '</span>') +
-    '</div><div><div class="ttl">' + esc(e.title) + '</div>' +
+    '<div class="when">' + when + '</div><div class="grow"><div class="ttl">' + esc(e.title) + '</div>' +
     (e.location ? '<div class="loc">' + esc(e.location) + '</div>' : '') + '</div></div>';
 }
 
 function renderAgenda() {
   var now = Date.now(), t0 = dayStart(new Date()), d1 = t0 + 86400000, d2 = d1 + 86400000, d3 = d2 + 86400000;
-  var groups = [[], [], []];
+  var groups = [[], [], []], next = null;
   for (var i = 0; i < DATA.events.length; i++) {
     var e = DATA.events[i];
+    if (!next && !e.allDay && e.end > now) next = e;
     if (e.start < d1 && e.end > t0) groups[0].push(e);
     else if (e.start >= d1 && e.start < d2) groups[1].push(e);
     else if (e.start >= d2 && e.start < d3) groups[2].push(e);
   }
-  var after = new Date(d2);
-  var titles = ["Aujourd'hui", 'Demain', JOURS[after.getDay()] + ' ' + after.getDate()];
   var html = '';
+  if (next) {
+    var ns = new Date(next.start), live = next.start <= now;
+    var jour = next.start < d1 ? '' : (next.start < d2 ? 'demain ' : JOURS[ns.getDay()] + ' ');
+    html += '<div class="next"><div class="lbl">' + (live ? 'En cours' : 'Prochain') + '</div>' +
+      '<div class="ttl">' + esc(next.title) + '</div><div class="info">' +
+      (live ? "jusqu'à " + hm(new Date(next.end)) : jour + hm(ns) + ' · ' + dans(next.start - now)) +
+      (next.location ? ' · ' + esc(next.location) : '') + '</div></div>';
+  }
+  var after = new Date(d2);
+  var titles = ["Aujourd'hui", 'Demain', cap(JOURS[after.getDay()]) + ' ' + after.getDate()];
   for (var g = 0; g < 3; g++) {
     if (g === 2 && !groups[2].length) continue;
-    html += '<h2' + (g ? ' class="more"' : '') + '>' + titles[g] + '</h2>';
+    html += '<div class="day"><h2>' + titles[g] + '</h2>';
     if (!groups[g].length) html += '<div class="empty">Rien de prévu</div>';
     for (var j = 0; j < groups[g].length; j++) html += evHtml(groups[g][j], now);
+    html += '</div>';
   }
   document.getElementById('agenda').innerHTML = html;
 }
