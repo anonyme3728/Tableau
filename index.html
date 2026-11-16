@@ -205,7 +205,7 @@ function tick() {
   $('s').textContent = pad(d.getSeconds());
   $('date').textContent = cap(JOURS[d.getDay()]) + ' ' + d.getDate() + ' ' + MOIS[d.getMonth()] + ' ' + d.getFullYear();
   var h = d.getHours();
-  document.body.className = (h >= 23 || h < 6) ? 'dim' : '';
+  document.body.className = ((h >= 23 || h < 6) && location.search.indexOf('nodim') < 0) ? 'dim' : '';
   if (d.getSeconds() === 0 && DATA) renderAgenda();
 }
 
@@ -384,7 +384,13 @@ function renderAgenda() {
     if (!groups[g].length) continue;
     var dd = new Date(t0 + g * DAY + 12 * 3600000);
     box.insertAdjacentHTML('beforeend', dayBlock(g, cap(JOURS[dd.getDay()]) + ' ' + dd.getDate()));
-    if (box.scrollHeight > box.clientHeight + 2) { box.removeChild(box.lastChild); break; }
+    if (box.scrollHeight > box.clientHeight + 2) {
+      // Ça déborde : on garde ce jour avec seulement les événements qui tiennent
+      var blk = box.lastChild;
+      while (blk.children.length > 1 && box.scrollHeight > box.clientHeight + 2) blk.removeChild(blk.lastChild);
+      if (blk.children.length < 2) box.removeChild(blk);
+      break;
+    }
   }
 }
 
